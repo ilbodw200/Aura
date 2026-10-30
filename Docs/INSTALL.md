@@ -1,6 +1,6 @@
 # Установка AURA
 
-Скачайте файлы из [AURA 1.0.1](https://github.com/ilbodw200/Aura/releases/tag/v1.0.1).
+Скачайте [iOS 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2) или [Android 1.0.1](https://github.com/ilbodw200/Aura/releases/tag/v1.0.1).
 
 ## Android
 
@@ -8,7 +8,7 @@
 
 ## iPhone / iPad
 
-`AURA-iOS-1.0.1-unsigned.ipa` нужно подписать вместе с вложенным `AuraTunnel.appex` вашим сертификатом и provisioning profiles, разрешающими Network Extension / packet-tunnel-provider. **App Group не нужна.** Фактический ID расширения читается из встроенного бандла после подписи.
+`AURA-iOS-1.0.2-unsigned.ipa` нужно подписать вместе с вложенным `AuraTunnel.appex` вашим сертификатом и provisioning profiles, разрешающими Network Extension / packet-tunnel-provider. **App Group не нужна.** Фактический ID расширения читается из встроенного бандла после подписи.
 
 HTTPS-подписка добавляется сразу кнопкой «Добавить подписку»; предварительная проверка необязательна. Для HTTP нужно принять предупреждение и проверить ссылку перед сохранением. TLS-сертификаты HTTPS не игнорируются.
 
