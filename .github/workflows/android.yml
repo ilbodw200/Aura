@@ -32,7 +32,7 @@ jobs:
         id: core-cache
         with:
           path: Android/app/libs/libbox.aar
-          key: android-libbox1.11.15-go1.24.2-ndk28-arm-arm64-amd64-v1
+          key: android-libbox1.11.15-go1.24.2-ndk28-arm-arm64-amd64-aura-probe-v1
       - name: Build Android VPN core
         env:
           AURA_USE_CACHED_ANDROID_CORE: ${{ steps.core-cache.outputs.cache-hit == 'true' && '1' || '0' }}
@@ -45,7 +45,7 @@ jobs:
         if: steps.core-cache.outputs.cache-hit != 'true'
         with:
           path: Android/app/libs/libbox.aar
-          key: android-libbox1.11.15-go1.24.2-ndk28-arm-arm64-amd64-v1
+          key: android-libbox1.11.15-go1.24.2-ndk28-arm-arm64-amd64-aura-probe-v1
       - uses: actions/upload-artifact@v4
         if: inputs.core_only
         with:

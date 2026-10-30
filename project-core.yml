@@ -1,5 +1,9 @@
 include: project.yml
 targets:
+  Aura:
+    dependencies:
+      - framework: Vendor/Libbox.xcframework
+        embed: false
   AuraTunnel:
     dependencies:
       - framework: Vendor/Libbox.xcframework

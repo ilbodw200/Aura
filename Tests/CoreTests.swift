@@ -4,6 +4,24 @@ import XCTest
 final class CoreTests: XCTestCase {
     private let uuid = "11111111-2222-4333-8444-555555555555"
 
+    func testPingSettingsMigrationAndValidation() throws {
+        let old = AppSnapshot()
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
+        object.removeValue(forKey: "ping")
+        let restored = try JSONDecoder().decode(AppSnapshot.self, from: JSONSerialization.data(withJSONObject: object))
+        XCTAssertNil(restored.ping)
+        var settings = PingSettings()
+        try settings.validate()
+        for bad in ["file:///tmp/test", "https://user:secret@example.com", "https://"] {
+            settings.url = bad
+            XCTAssertThrowsError(try settings.validate())
+        }
+        settings = PingSettings(); settings.timeout = 16
+        XCTAssertThrowsError(try settings.validate())
+        settings.timeout = 5; settings.method = .head; settings.mode = .keepalive
+        XCTAssertEqual(try JSONDecoder().decode(PingSettings.self, from: JSONEncoder().encode(settings)), settings)
+    }
+
     func testVlessRealityAndIPv6() throws {
         let profile = try ProfileParser.parseLink("vless://\(uuid)@[2001:db8::1]:443?security=reality&pbk=test-public-key&sid=ab&fp=chrome&flow=xtls-rprx-vision#My%20server")
         XCTAssertEqual(profile.name, "My server")

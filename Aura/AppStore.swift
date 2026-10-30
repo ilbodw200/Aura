@@ -8,6 +8,9 @@ final class AppStore {
     var message: String?
     var busy = false
     var events: [String] = []
+    var probing: Set<UUID> = []
+    var pingErrors: [UUID: String] = [:]
+    var batchProbing = false
     private var storageReady = false
     var selected: ProxyProfile? { snapshot.profiles.first { $0.id == snapshot.selectedID } }
     var favorites: [ProxyProfile] { snapshot.profiles.filter(\.favorite) }
@@ -122,14 +125,36 @@ final class AppStore {
             log("Обновление подписки не выполнено.")
         }
     }
-    func measure(_ profile: ProxyProfile) async {
-        guard !profile.isExample else { message = "Примеры не содержат настоящего сервера."; return }
+    func measure(_ profile: ProxyProfile, reportError: Bool = true) async {
+        guard !probing.contains(profile.id) else { return }
+        guard !profile.isExample else { if reportError { message = "Примеры не содержат настоящего сервера." }; return }
+        probing.insert(profile.id); pingErrors[profile.id] = nil
+        let settings = snapshot.ping ?? PingSettings()
+        defer { probing.remove(profile.id) }
         do {
-            let latency = try await LatencyService.measure(host: profile.host, port: profile.port)
+            let result = try await ProbeService.measure(profile: profile, snapshot: snapshot, settings: settings)
             if let index = snapshot.profiles.firstIndex(where: { $0.id == profile.id }) {
-                snapshot.profiles[index].latencyMS = latency; snapshot.profiles[index].latencyCheckedAt = .now; persist()
+                snapshot.profiles[index].latencyMS = result.ms
+                snapshot.profiles[index].latencyCheckedAt = .now
+                snapshot.profiles[index].pingMethod = settings.method.rawValue
+                snapshot.profiles[index].pingStatus = result.status
+                persist()
             }
-        } catch { message = "Сервер не ответил на TCP-проверку. Для Hysteria2 это не проверка доступности UDP." }
+        } catch {
+            pingErrors[profile.id] = "Нет ответа · \(settings.method.rawValue)"
+            if let index = snapshot.profiles.firstIndex(where: { $0.id == profile.id }) { snapshot.profiles[index].latencyMS = nil; snapshot.profiles[index].pingStatus = nil; persist() }
+            if reportError { message = error.localizedDescription }
+        }
+    }
+    func measureGroup(_ profiles: [ProxyProfile]) async {
+        guard !batchProbing else { return }; batchProbing = true
+        defer { batchProbing = false }
+        // Bound traffic and core memory: two isolated probes at a time.
+        for offset in stride(from: 0, to: profiles.count, by: 2) {
+            await withTaskGroup(of: Void.self) { group in
+                for profile in profiles[offset..<min(offset + 2, profiles.count)] { group.addTask { await self.measure(profile, reportError: false) } }
+            }
+        }
     }
     func addExamples() {
         let examples = [ProxyProfile(name: "Amsterdam · пример", kind: .vless, host: "nl.example.invalid", port: 443, credential: UUID().uuidString, favorite: true, isExample: true), ProxyProfile(name: "Helsinki · пример", kind: .trojan, host: "fi.example.invalid", port: 443, credential: "example", isExample: true)]

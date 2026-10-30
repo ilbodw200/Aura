@@ -49,13 +49,13 @@ struct ProfilesView: View {
                         .swipeActions(edge: .trailing) { Button("Удалить", role: .destructive) { store.remove(profile.id) }; Button("Изменить") { editing = profile }.tint(.blue) }
                         .swipeActions(edge: .leading) { Button { store.favorite(profile.id) } label: { Label("Избранное", systemImage: profile.favorite ? "star.slash" : "star") }.tint(.orange) }
                         .contextMenu {
-                            Button("Проверить TCP-задержку", systemImage: "waveform.path") { Task { await store.measure(profile) } }
+                            Button("Проверить задержку", systemImage: "waveform.path") { Task { await store.measure(profile) } }
                             Button("Изменить название", systemImage: "pencil") { editing = profile }
                             Button("Избранное", systemImage: "star") { store.favorite(profile.id) }
                         }
                 }
             } header: { HStack { Text("Профили"); Spacer(); Text("\(profiles.count)") } } footer: {
-                Text("Задержка — время TCP-соединения с сервером. Это не скорость VPN. Hysteria2 использует UDP.")
+                Text("Метод измерения выбирается в настройках пинга. TCP и ICMP не подтверждают прохождение трафика через прокси.")
             }
             if profiles.isEmpty && !store.snapshot.profiles.isEmpty { Text("По этим условиям серверов нет.").foregroundStyle(.secondary) }
         }

@@ -13,6 +13,7 @@ if [ ! -d "$CORE/.git" ]; then
 fi
 cd "$CORE"
 test "$(git describe --tags --exact-match)" = v1.11.15
+cp "$ROOT/CorePatch/aura_probe.go" "$CORE/experimental/libbox/aura_probe.go"
 go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.4
 go install github.com/sagernet/gomobile/cmd/gobind@v0.1.4
 go run ./cmd/internal/build_libbox -target android -platform android/arm64,android/arm,android/amd64

@@ -31,11 +31,12 @@ struct SettingsView: View {
                 Text("Это устойчивый идентификатор AURA в Связке ключей, а не серийный номер телефона. При включении сервер выбранной подписки получает HWID, модель и версию iOS. Для существующей подписки откройте её настройки во вкладке «Серверы» и обновите список.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Инструменты") {
+                Button("Настройки пинга", systemImage: "speedometer") { openSheet(.ping) }
                 Button("Диагностика", systemImage: "waveform.path.ecg") { openSheet(.diagnostics) }
                 Button("Зашифрованная резервная копия", systemImage: "externaldrive.badge.shield.half.filled") { openSheet(.backup) }
             }
             Section("О приложении") {
-                LabeledContent("AURA", value: "0.1.2 · Developer Preview")
+                LabeledContent("AURA", value: "1.0.0")
                 LabeledContent("Интерфейс", value: "SwiftUI · Liquid Glass")
                 Text("VPN-ядро входит в полную сборку. App Group для подключения не требуется, но подпись приложения и расширения должна разрешать Network Extension. Полное соответствие Happ пока не достигнуто.").font(.caption).foregroundStyle(.secondary)
                 Link("Исходный код sing-box и лицензия", destination: URL(string: "https://github.com/SagerNet/sing-box")!)

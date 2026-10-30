@@ -10,7 +10,7 @@ let package = Package(
         .target(name: "Aura", path: ".", exclude: [
             "Aura/Features", "Aura/Design", "Aura/Assets.xcassets",
             "Aura/AppStore.swift", "Aura/AuraApp.swift", "Aura/RootView.swift",
-            "Aura/Services/LatencyService.swift", "Aura/Services/SubscriptionService.swift",
+            "CorePatch", "Aura/Services/ProbeService.swift", "Aura/Services/LatencyService.swift", "Aura/Services/SubscriptionService.swift",
             "Aura/Services/TunnelController.swift", "Aura.xcodeproj", "Build IPA.command",
             "Aura/Services/DeviceIdentity.swift", "Android",
             "Config", "Docs", "Scripts", "Tests", "Tunnel", "LICENSE", "README.md",

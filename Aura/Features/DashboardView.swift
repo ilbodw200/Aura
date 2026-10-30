@@ -3,30 +3,27 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @State private var collapsed = false
     let openSheet: (AppSheet) -> Void
     let showServers: () -> Void
     var body: some View {
         ScrollView {
             GlassGroup {
             VStack(spacing: 22) {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("ВАШЕ СОЕДИНЕНИЕ. ВАШИ ПРАВИЛА.").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.7).foregroundStyle(.secondary)
-                        Text("Пространство\nбез границ.").font(.system(size: 32, weight: .semibold, design: .rounded)).tracking(-1).fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer(minLength: 0)
-                    Button { openSheet(.scanner) } label: { Image(systemName: "qrcode.viewfinder").font(.title3).frame(width: 48, height: 48).auraGlass(interactive: true, radius: 18) }.accessibilityLabel("Сканировать QR-код")
-                }
                 connectionOrb
-                GlassGroup {
-                    HStack(spacing: 12) {
-                        Button { openSheet(.importer) } label: { Label("Добавить", systemImage: "plus").font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 15).auraGlass(interactive: true, radius: 19) }
-                        Button { openSheet(.diagnostics) } label: { Label("Диагностика", systemImage: "waveform.path.ecg").font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 15).auraGlass(interactive: true, radius: 19) }
-                    }
-                }
+                HStack {
+                    Button("Проверить соединение") {
+                        guard let profile = store.selected else { openSheet(.importer); return }
+                        Task { await store.measure(profile) }
+                    }.disabled(store.selected.map { store.probing.contains($0.id) } ?? false)
+                    Spacer()
+                    Button(collapsed ? "Показать все" : "Скрыть все") { collapsed.toggle() }
+                }.font(.caption.weight(.medium))
+                HStack { Button { openSheet(.ping) } label: { Label("Пинг: \((store.snapshot.ping ?? PingSettings()).method.title)", systemImage: "speedometer") }; Spacer(); if store.batchProbing { ProgressView() } }.font(.caption).foregroundStyle(.secondary)
+                ServerGroupsView(collapsed: collapsed)
                 ForEach(store.snapshot.appearance.widgets.filter { !store.snapshot.appearance.hiddenWidgets.contains($0) }) { widget in
                     switch widget {
-                    case .server: serverCard
+                    case .server: EmptyView()
                     case .routing: routingCard
                     case .favorites: favoritesCard
                     }
@@ -37,7 +34,7 @@ struct DashboardView: View {
         }
         .auraPage()
         .navigationTitle("AURA").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Image(systemName: "sparkle").foregroundStyle(store.accent).accessibilityHidden(true) } }
+        .toolbar { ToolbarItem(placement: .topBarLeading) { Button { openSheet(.ping) } label: { Image(systemName: "gearshape") }.accessibilityLabel("Настройки пинга") }; ToolbarItem(placement: .topBarTrailing) { Button { openSheet(.importer) } label: { Image(systemName: "plus") }.accessibilityLabel("Добавить подключение") } }
     }
     private var connectionOrb: some View {
         VStack(spacing: 16) {

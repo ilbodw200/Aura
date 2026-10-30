@@ -27,7 +27,7 @@ jobs:
         id: libbox-cache
         with:
           path: Vendor/Libbox.xcframework
-          key: libbox-v1.11.15-gomobile0.1.4-go1.24.2-macos26-${{ runner.arch }}-v1
+          key: libbox-aura-probe-v1.11.15-gomobile0.1.4-go1.24.2-macos26-${{ runner.arch }}-aura-probe-v1
       - name: Compile iPhone app and package unsigned IPA
         env:
           AURA_VARIANT: ${{ inputs.variant }}
@@ -44,4 +44,4 @@ jobs:
         if: always() && inputs.variant == 'full' && steps.libbox-cache.outputs.cache-hit != 'true' && hashFiles('Vendor/Libbox.xcframework/Info.plist') != ''
         with:
           path: Vendor/Libbox.xcframework
-          key: libbox-v1.11.15-gomobile0.1.4-go1.24.2-macos26-${{ runner.arch }}-v1
+          key: libbox-aura-probe-v1.11.15-gomobile0.1.4-go1.24.2-macos26-${{ runner.arch }}-aura-probe-v1

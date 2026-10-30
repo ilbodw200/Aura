@@ -15,7 +15,7 @@ struct DiagnosticsView: View {
                     if let selected = store.selected { LabeledContent("Протокол", value: selected.kind.title) }
                 }
                 Section("Проверки") {
-                    Button(checking ? "Проверяем…" : "Измерить TCP-задержку", systemImage: "waveform.path") {
+                    Button(checking ? "Проверяем…" : "Проверить выбранным методом", systemImage: "waveform.path") {
                         guard let profile = store.selected else { return }
                         checking = true
                         Task { await store.measure(profile); checking = false }
@@ -24,7 +24,7 @@ struct DiagnosticsView: View {
                         LabeledContent("Последний результат", value: "\(ms) ms")
                         if let date = selected.latencyCheckedAt { Text(date.formatted()).font(.caption).foregroundStyle(.secondary) }
                     }
-                    Text("TCP-проверка обращается к адресу сервера. Для Hysteria2 нужен отдельный UDP-тест; проверка не подтверждает работу VPN.").font(.caption).foregroundStyle(.secondary)
+                    Text("GET/HEAD проверяют выбранный прокси. TCP и ICMP проверяют сервер по текущему сетевому маршруту.").font(.caption).foregroundStyle(.secondary)
                     Button("Проверить конфигурацию туннеля", systemImage: "checkmark.shield") {
                         do { guard let profile = store.selected else { throw AuraError.message("Сначала выберите сервер.") }; _ = try ConfigBuilder.build(profile: profile, snapshot: store.snapshot); configResult = "Конфигурация JSON сформирована. Проверка ядром и тест соединения ещё необходимы." }
                         catch { configResult = error.localizedDescription }

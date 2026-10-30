@@ -28,6 +28,8 @@ struct ProxyProfile: Codable, Identifiable, Equatable {
     var latencyMS: Int?
     var latencyCheckedAt: Date?
     var isExample = false
+    var pingMethod: String?
+    var pingStatus: Int?
     var subtitle: String { "\(kind.title) · \(host):\(port)" }
 }
 
@@ -126,6 +128,7 @@ struct Appearance: Codable, Equatable {
 }
 
 struct AppSnapshot: Codable {
+    var ping: PingSettings?
     var version = 1
     var profiles: [ProxyProfile] = []
     var subscriptions: [Subscription] = []

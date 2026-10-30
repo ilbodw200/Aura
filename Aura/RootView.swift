@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum AppTab: Hashable { case home, profiles, rules, appearance, settings }
-enum AppSheet: String, Identifiable { case importer, scanner, diagnostics, backup; var id: String { rawValue } }
+enum AppSheet: String, Identifiable { case importer, scanner, diagnostics, backup, ping; var id: String { rawValue } }
 
 struct RootView: View {
     @Environment(AppStore.self) private var store
@@ -26,6 +26,7 @@ struct RootView: View {
             case .scanner: ScannerSheet()
             case .diagnostics: DiagnosticsView()
             case .backup: BackupView()
+            case .ping: PingSettingsView()
             }
         }
         .alert("AURA", isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) { Button("Понятно") { store.message = nil } } message: { Text(store.message ?? "") }
