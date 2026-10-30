@@ -14,3 +14,10 @@ dist/
 *.p12
 *.mobileprovision
 build-ipa.*/
+Android/.gradle/
+Android/**/build/
+Android/app/libs/
+Android/local.properties
+*.apk
+*.jks
+*.p12

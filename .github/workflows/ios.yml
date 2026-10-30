@@ -1,5 +1,10 @@
 name: iOS build, core tests and launch
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
+  workflow_dispatch:
 jobs:
   test:
     runs-on: macos-26

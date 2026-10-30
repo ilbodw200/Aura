@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.Aura" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#6EEFC5</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#08121C</item>
+        <item name="android:navigationBarColor">#08121C</item>
+    </style>
+</resources>

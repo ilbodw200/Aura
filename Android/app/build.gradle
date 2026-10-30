@@ -1,0 +1,38 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'app.aura.android'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'app.aura.android'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    signingConfigs {
+        release {
+            if (System.getenv('AURA_SIGNING_STORE')) {
+                storeFile file(System.getenv('AURA_SIGNING_STORE'))
+                storeType 'PKCS12'
+                storePassword System.getenv('AURA_SIGNING_PASSWORD')
+                keyAlias 'aura'
+                keyPassword System.getenv('AURA_SIGNING_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release { signingConfig signingConfigs.release; minifyEnabled false }
+    }
+    buildFeatures { buildConfig true }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    packaging { jniLibs { useLegacyPackaging = false } }
+}
+dependencies {
+    implementation files('libs/libbox.aar')
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+}
