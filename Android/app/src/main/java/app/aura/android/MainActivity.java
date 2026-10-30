@@ -24,9 +24,9 @@ import java.util.concurrent.*;
 public final class MainActivity extends Activity {
     private JSONObject state;private Vault vault;private boolean storageReady,busy;private int tab;private Ui ui;private LinearLayout body;private TextView statusText,timerText;
     private final ExecutorService tasks=Executors.newSingleThreadExecutor();private final Handler handler=new Handler(Looper.getMainLooper());private byte[] exportBytes;private String restorePassword="";
-    private final SharedPreferences.OnSharedPreferenceChangeListener runtimeListener=(p,key)->{if(key.equals("revision"))runOnUiThread(()->{render();if(!AuraVpnService.lastError.isEmpty())message(AuraVpnService.lastError);});};
+    private final SharedPreferences.OnSharedPreferenceChangeListener runtimeListener=(p,key)->{if(key.equals("revision"))runOnUiThread(()->{render();if(!AuraVpnService.lastError.isEmpty()){String error=AuraVpnService.lastError;AuraVpnService.lastError="";message(error);}});};
     interface Action {void run()throws Exception;}
-    private void safe(Action action){try{action.run();}catch(Exception e){message(e.getMessage()==null?"Не удалось выполнить действие.":e.getMessage());}}
+    private void safe(Action action){try{action.run();}catch(Exception e){if(body!=null)render();message(e.getMessage()==null?"Не удалось выполнить действие.":e.getMessage());}}
     private boolean active(){return !AuraVpnService.status.equals("disconnected");}
     private void requireOff()throws Exception{if(active())throw new Exception("Сначала отключите VPN, чтобы изменить конфигурацию.");}
     private void save()throws Exception{if(!storageReady)throw new Exception("Хранилище недоступно; существующие данные не перезаписаны.");vault.save(state);}

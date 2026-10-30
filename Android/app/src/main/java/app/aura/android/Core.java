@@ -64,7 +64,7 @@ public final class Core {
         if(!Arrays.asList("vless","vmess","trojan","shadowsocks","socks","hysteria2").contains(type))throw new Exception("Неизвестный протокол.");
         if(host.isEmpty()||host.length()>253||host.matches(".*\\s.*")||port<1||port>65535||p.getString("name").isEmpty())throw new Exception("Проверьте адрес, порт и название.");
         if(!type.equals("socks")&&p.optString("credential").isEmpty())throw new Exception("Нет ключа или пароля.");
-        if(type.equals("vless")||type.equals("vmess")){try{UUID.fromString(p.getString("credential"));}catch(Exception e){throw new Exception("Нужен корректный UUID.");}}
+        if(type.equals("vless")||type.equals("vmess")){try{String id=p.getString("credential");if(!UUID.fromString(id).toString().equalsIgnoreCase(id))throw new Exception();}catch(Exception e){throw new Exception("Нужен корректный UUID.");}}
         JSONObject q=p.getJSONObject("query");
         Set<String> allowed=new HashSet<>(Arrays.asList("type","security","sni","peer","fp","pbk","sid","flow","path","host","serviceName","alpn","encryption","scy","aid","allowInsecure","insecure","obfs","obfs-password"));
         Iterator<String> keys=q.keys();while(keys.hasNext()){String key=keys.next();if(!allowed.contains(key))throw new Exception("Параметр "+key+" пока не поддерживается.");}

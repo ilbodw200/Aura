@@ -6,7 +6,7 @@ import android.os.Build;
 import java.util.*;
 
 final class DeviceInfo {
-    static String hwid(Context context){
+    static synchronized String hwid(Context context){
         SharedPreferences p=context.getSharedPreferences("device-identity",Context.MODE_PRIVATE);
         String value=p.getString("hwid",null);if(value==null){value=UUID.randomUUID().toString();p.edit().putString("hwid",value).apply();}return value;
     }

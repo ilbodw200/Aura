@@ -5,3 +5,8 @@
 *.yml text eol=lf
 *.pbxproj text eol=lf
 *.png binary
+*.java text eol=lf
+*.gradle text eol=lf
+Android/gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
