@@ -33,13 +33,14 @@ final class Vault {
         byte[] encrypted=cipher.doFinal(state.toString().getBytes(StandardCharsets.UTF_8));FileOutputStream stream=null;
         try{stream=file.startWrite();stream.write(cipher.getIV());stream.write(encrypted);file.finishWrite(stream);}catch(Exception e){if(stream!=null)file.failWrite(stream);throw e;}
     }
-    static List<JSONObject> fetch(String text,Map<String,String> metadata)throws Exception{
+    static List<JSONObject> fetch(String text,Map<String,String> metadata)throws Exception{return fetch(text,metadata,false);}
+    static List<JSONObject> fetch(String text,Map<String,String> metadata,boolean allowHTTP)throws Exception{
         boolean identityAllowed=true;
         URL url=new URL(text);for(int redirects=0;redirects<6;redirects++){
-            if(!url.getProtocol().equals("https")||url.getUserInfo()!=null)throw new Exception("Нужна HTTPS-подписка без логина в адресе.");
+            Core.validateSubscriptionURL(url.toString(),allowHTTP);
             HttpURLConnection connection=(HttpURLConnection)url.openConnection();connection.setInstanceFollowRedirects(false);connection.setConnectTimeout(15000);connection.setReadTimeout(20000);connection.setRequestProperty("User-Agent","Aura-Android/0.1");
-            if(identityAllowed&&metadata!=null)for(Map.Entry<String,String> entry:metadata.entrySet())connection.setRequestProperty(entry.getKey(),entry.getValue());
-            try{int code=connection.getResponseCode();if(code>=300&&code<400){String location=connection.getHeaderField("Location");if(location==null)throw new Exception("Нет адреса перенаправления.");URL next=new URL(url,location);if(!next.getHost().equalsIgnoreCase(url.getHost())||next.getPort()!=url.getPort())identityAllowed=false;url=next;continue;}if(code<200||code>=300)throw new Exception("Сервер подписки вернул ошибку.");
+            if(url.getProtocol().equals("https")&&identityAllowed&&metadata!=null)for(Map.Entry<String,String> entry:metadata.entrySet())connection.setRequestProperty(entry.getKey(),entry.getValue());
+            try{int code=connection.getResponseCode();if(code>=300&&code<400){String location=connection.getHeaderField("Location");if(location==null)throw new Exception("Нет адреса перенаправления.");URL next=new URL(url,location);if(url.getProtocol().equals("https")&&!next.getProtocol().equals("https"))throw new Exception("Переход с HTTPS на HTTP заблокирован.");if(!next.getHost().equalsIgnoreCase(url.getHost())||next.getPort()!=url.getPort())identityAllowed=false;url=next;continue;}if(code<200||code>=300)throw new Exception("Сервер подписки вернул HTTP "+code+".");
                 try(InputStream input=connection.getInputStream()){return Core.parse(new String(readLimit(input,2_000_000),StandardCharsets.UTF_8));}
             }finally{connection.disconnect();}
         }throw new Exception("Слишком много перенаправлений.");

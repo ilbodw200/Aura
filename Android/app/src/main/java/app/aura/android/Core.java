@@ -13,6 +13,14 @@ public final class Core {
     public static JSONArray array(Object... values) { JSONArray out = new JSONArray(); for (Object value : values) out.put(value); return out; }
     public static JSONObject obj(Object... values) throws Exception { JSONObject out = new JSONObject(); for (int i=0;i<values.length;i+=2) out.put((String) values[i], values[i+1]); return out; }
     static String decode(String s) throws Exception { return URLDecoder.decode(s.replace("+", "%2B"), "UTF-8"); }
+    public static void validateSubscriptionURL(String value,boolean allowHTTP)throws Exception{
+        URI uri=new URI(value);String scheme=uri.getScheme()==null?"":uri.getScheme().toLowerCase(Locale.ROOT);
+        if((!scheme.equals("https")&&!(scheme.equals("http")&&allowHTTP))||uri.getHost()==null||uri.getUserInfo()!=null)throw new Exception("Нужна HTTPS-ссылка. Для HTTP требуется отдельное подтверждение и проверка.");
+    }
+    public static void validateSubscriptionForSaving(String url,boolean allowHTTP,String verifiedURL,int count)throws Exception{
+        validateSubscriptionURL(url,allowHTTP);
+        if(new URI(url).getScheme().equalsIgnoreCase("http")&&(!allowHTTP||!url.equals(verifiedURL)||count<1))throw new Exception("Сначала разрешите HTTP и проверьте доступность и формат этой ссылки.");
+    }
     static byte[] base64(String s) { return Base64.getDecoder().decode(s.replace('-', '+').replace('_', '/').replaceAll("\\s", "")); }
     public static JSONObject defaults() throws Exception {
         return obj("platform", "android", "version", 1, "profiles", new JSONArray(), "subscriptions", new JSONArray(), "rules", new JSONArray(), "selected", "", "mode", "smart", "accent", "mint", "backdrop", "aurora", "theme", "dark", "compact", false, "showHost", true, "hideRecents", true, "radius", 28, "bypassLAN", true, "excludedApps", new JSONArray(), "widgets", array("server","routing","favorites"), "hiddenWidgets", new JSONArray(), "dns", "https://1.1.1.1/dns-query");

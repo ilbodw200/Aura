@@ -14,4 +14,11 @@ public class CoreTest {
     @Test public void orderedRouting()throws Exception{JSONObject s=Core.defaults();JSONObject p=Core.link("trojan://secret@example.com:443");s.getJSONArray("profiles").put(p);s.put("selected",p.getString("id"));s.getJSONArray("rules").put(Core.obj("id","rule","kind","suffix","value","ads.example","action","block","enabled",true));assertTrue(Core.route(s,"api.ads.example").startsWith("Блокировать"));assertEquals("reject",new JSONObject(Core.config(s)).getJSONObject("route").getJSONArray("rules").getJSONObject(1).getString("action"));s.put("mode","global");assertFalse(Core.config(s).contains("ads.example"));}
     @Test public void backupAuthenticatesAndRestores()throws Exception{JSONObject s=Core.defaults();JSONObject p=Core.link("trojan://secret@example.com:443");s.getJSONArray("profiles").put(p);String password="test-long-password";byte[] data=Backup.export(s,password);assertFalse(new String(data,StandardCharsets.UTF_8).contains("secret"));assertEquals("secret",Backup.restore(data,password).getJSONArray("profiles").getJSONObject(0).getString("credential"));assertThrows(Exception.class,()->Backup.restore(data,"wrong-password"));assertThrows(Exception.class,()->Backup.export(s,"short"));}
     @Test public void stubProfileCannotConnect()throws Exception{JSONObject p=Core.link("vless://"+uuid+"@0.0.0.0:1#EnableHWID");JSONObject s=Core.defaults();s.getJSONArray("profiles").put(p);s.put("selected",p.getString("id"));assertThrows(Exception.class,()->Core.config(s));}
+    @Test public void HTTPSCanSaveWithoutCheckingButHTTPCannot()throws Exception{
+        Core.validateSubscriptionForSaving("https://provider.example/sub",false,null,0);
+        assertThrows(Exception.class,()->Core.validateSubscriptionForSaving("http://provider.example/sub",false,null,0));
+        assertThrows(Exception.class,()->Core.validateSubscriptionForSaving("http://provider.example/sub",true,null,1));
+        assertThrows(Exception.class,()->Core.validateSubscriptionForSaving("http://provider.example/sub",true,"http://other.example/sub",1));
+        Core.validateSubscriptionForSaving("http://provider.example/sub",true,"http://provider.example/sub",1);
+    }
 }
