@@ -31,7 +31,7 @@ public final class Core {
         List<JSONObject> result=new ArrayList<>(); int line=0;
         for(String raw:text.split("\\r?\\n")) { line++; raw=raw.trim(); if(raw.isEmpty()||raw.startsWith("#"))continue;
             if(result.size()>=1000)throw new Exception("Максимум 1000 профилей.");
-            try { result.add(link(raw)); } catch(Exception e) { throw new Exception("Строка "+line+": "+e.getMessage()); }
+            try { result.add(link(raw)); } catch(Exception e) { throw new Exception("Строка "+line+": "+(e instanceof java.net.URISyntaxException?((java.net.URISyntaxException)e).getReason():e instanceof org.json.JSONException?"JSON-конфигурация повреждена.":e.getMessage())); }
         }
         if(result.isEmpty())throw new Exception("Список конфигураций пуст."); return result;
     }

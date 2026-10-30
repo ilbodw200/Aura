@@ -73,7 +73,7 @@ public final class MainActivity extends Activity {
     private void select(JSONObject p)throws Exception{requireOff();state.put("selected",p.getString("id"));save();render();}
     private void profiles()throws Exception{
         heading("Все ваши подключения","Серверы");ui.add(body,button("＋ Добавить подключение",()->importDialog("")));ui.space(body,18);
-        JSONArray subscriptions=state.getJSONArray("subscriptions");for(int i=0;i<subscriptions.length();i++){JSONObject sub=subscriptions.getJSONObject(i);LinearLayout c=info(body,sub.getString("name"),"Подписка · HWID "+(sub.optBoolean("sendHWID",state.optBoolean("sendHWID"))?"включён":"выключен"));ui.add(c,button("Обновить",()->refresh(sub)));ui.space(c,8);ui.add(c,button("Настройки подписки",()->editSubscription(sub)));}
+        JSONArray subscriptions=state.getJSONArray("subscriptions");for(int i=0;i<subscriptions.length();i++){JSONObject sub=subscriptions.getJSONObject(i);LinearLayout c=info(body,sub.getString("name"),"Подписка · HWID "+(sub.optBoolean("sendHWID",state.optBoolean("sendHWID"))?"включён":"выключен"));ui.add(c,ui.text(sub.getString("url").toLowerCase(Locale.ROOT).startsWith("https://")?"HTTPS · TLS при загрузке":"HTTP · без шифрования",12,ui.muted));if(sub.has("lastError"))ui.add(c,ui.text(sub.optString("lastError"),12,0xffffbb75));ui.add(c,button("Обновить",()->refresh(sub)));ui.space(c,8);ui.add(c,button("Настройки подписки",()->editSubscription(sub)));}
         EditText search=ui.input("Поиск по названию или протоколу","");ui.add(body,search);ui.space(body,14);LinearLayout list=ui.column();ui.add(body,list);renderProfiles(list,"");search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){safe(()->renderProfiles(list,s.toString()));}public void afterTextChanged(Editable e){}});
     }
     private void renderProfiles(LinearLayout list,String query)throws Exception{list.removeAllViews();JSONArray profiles=state.getJSONArray("profiles");boolean any=false;for(int i=0;i<profiles.length();i++){JSONObject p=profiles.getJSONObject(i);if(!p.getString("name").toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT))&&!p.getString("type").contains(query.toLowerCase(Locale.ROOT)))continue;any=true;
@@ -124,7 +124,7 @@ public final class MainActivity extends Activity {
                 String title=name.getText().toString().trim();if(title.isEmpty())throw new Exception("Введите название.");
                 JSONObject sub=Core.obj("id",UUID.randomUUID().toString(),"name",title,"url",value,"sendHWID",secure&&hwid.isChecked(),"allowHTTP",plain&&approval.isChecked());
                 subscriptions.put(sub);if(profiles!=null)for(JSONObject p:profiles){p.put("subscription",sub.getString("id"));state.getJSONArray("profiles").put(p);}ensureSelection();save();tab=1;dialog.dismiss();render();
-                if(profiles==null&&!busy)refresh(sub);return;
+                if(profiles==null&&!busy)refresh(sub,true);return;
             }
             List<JSONObject> profiles=Core.parse(value);if(state.getJSONArray("profiles").length()+profiles.size()>1000)throw new Exception("Максимум 1000 профилей.");for(JSONObject p:profiles)state.getJSONArray("profiles").put(p);ensureSelection();save();tab=1;dialog.dismiss();render();
         })));dialog.show();
@@ -132,7 +132,45 @@ public final class MainActivity extends Activity {
 
     private void ensureSelection()throws Exception{JSONArray ps=state.getJSONArray("profiles");if(Core.selected(state)==null)state.put("selected",ps.length()==0?"":ps.getJSONObject(0).getString("id"));}
     private static void remove(JSONArray items,String id)throws Exception{for(int i=items.length()-1;i>=0;i--)if(items.getJSONObject(i).getString("id").equals(id))items.remove(i);}
-    private void refresh(JSONObject sub)throws Exception{requireOff();String id=sub.getString("id");background(()->Vault.fetch(sub.getString("url"),sub.optBoolean("sendHWID",state.optBoolean("sendHWID"))?DeviceInfo.headers(this):null,sub.optBoolean("allowHTTP")),incoming->{requireOff();JSONArray ps=state.getJSONArray("profiles");List<JSONObject> old=new ArrayList<>();for(int i=0;i<ps.length();i++)if(ps.getJSONObject(i).optString("subscription").equals(id))old.add(ps.getJSONObject(i));if(ps.length()-old.size()+incoming.size()>1000)throw new Exception("Слишком много профилей.");for(JSONObject p:incoming){p.put("subscription",id);for(JSONObject previous:old)if(previous.getString("type").equals(p.getString("type"))&&previous.getString("host").equals(p.getString("host"))&&previous.getInt("port")==p.getInt("port")&&previous.getString("credential").equals(p.getString("credential"))){p.put("id",previous.getString("id")).put("favorite",previous.optBoolean("favorite"));break;}}for(int i=ps.length()-1;i>=0;i--)if(ps.getJSONObject(i).optString("subscription").equals(id))ps.remove(i);for(JSONObject p:incoming)ps.put(p);ensureSelection();save();render();message("Подписка обновлена: "+incoming.size()+" серверов.");});}
+    private void refresh(JSONObject sub)throws Exception { refresh(sub,false); }
+    private void refresh(JSONObject sub,boolean quiet)throws Exception {
+        requireOff();if(busy)throw new Exception("Дождитесь текущего обновления.");
+        final String id=sub.getString("id"),url=sub.getString("url");
+        final Map<String,String> headers=url.toLowerCase(Locale.ROOT).startsWith("https://")&&sub.optBoolean("sendHWID",state.optBoolean("sendHWID"))?DeviceInfo.headers(this):null;
+        final boolean permit=sub.optBoolean("allowHTTP");busy=true;
+        tasks.execute(()->{
+            try {
+                List<JSONObject> incoming=Vault.fetch(url,headers,permit);
+                runOnUiThread(()->{
+                    busy=false;if(isDestroyed())return;
+                    try {
+                        requireOff();JSONObject current=Core.find(state.getJSONArray("subscriptions"),id);if(current==null)return;
+                        JSONArray ps=state.getJSONArray("profiles");List<JSONObject> old=new ArrayList<>();
+                        for(int i=0;i<ps.length();i++)if(ps.getJSONObject(i).optString("subscription").equals(id))old.add(ps.getJSONObject(i));
+                        if(ps.length()-old.size()+incoming.size()>1000)throw new Exception("Слишком много профилей.");
+                        Set<String> reused=new HashSet<>();
+                        for(JSONObject p:incoming){p.put("subscription",id);for(JSONObject previous:old){String previousId=previous.getString("id");if(!reused.contains(previousId)&&previous.getString("type").equals(p.getString("type"))&&previous.getString("host").equals(p.getString("host"))&&previous.getInt("port")==p.getInt("port")&&previous.getString("credential").equals(p.getString("credential"))&&previous.getJSONObject("query").toString().equals(p.getJSONObject("query").toString())){p.put("id",previousId).put("favorite",previous.optBoolean("favorite"));reused.add(previousId);break;}}}
+                        for(int i=ps.length()-1;i>=0;i--)if(ps.getJSONObject(i).optString("subscription").equals(id))ps.remove(i);
+                        for(JSONObject p:incoming)ps.put(p);
+                        current.remove("lastError");current.put("updated",System.currentTimeMillis());ensureSelection();save();render();
+                        if(!quiet)message("Подписка обновлена: "+incoming.size()+" серверов.");
+                    } catch(Exception e){subscriptionFailure(id,e,quiet);}
+                });
+            } catch(Exception e){runOnUiThread(()->{busy=false;if(!isDestroyed())subscriptionFailure(id,e,quiet);});}
+        });
+    }
+    private void subscriptionFailure(String id,Exception error,boolean quiet) {
+        String detail;
+        if(error instanceof javax.net.ssl.SSLException)detail="Не удалось установить TLS-соединение. Проверка сертификата не отключена.";
+        else if(error instanceof java.net.SocketTimeoutException)detail="Сервер не ответил вовремя. Ссылка сохранена.";
+        else if(error instanceof java.net.UnknownHostException)detail="Не удалось разрешить DNS-имя сервера. Ссылка сохранена.";
+        else if(error instanceof java.io.IOException)detail="Сетевая ошибка. Ссылка сохранена; обновите её позже.";
+        else detail=error.getMessage()==null?"Не удалось обработать ответ сервера.":error.getMessage().replaceAll("[a-zA-Z][a-zA-Z0-9+.-]*://\\S+","[адрес скрыт]");
+        if(detail.length()>500)detail=detail.substring(0,500);
+        try{JSONObject current=Core.find(state.getJSONArray("subscriptions"),id);if(current!=null){current.put("lastError",detail);save();}}catch(Exception ignored){}
+        render();if(!quiet)message(detail);
+    }
+
     private void editSubscription(JSONObject sub){LinearLayout form=ui.column();form.setPadding(ui.dp(20),0,ui.dp(20),0);EditText name=ui.input("Название",sub.optString("name"));ui.add(form,name);Switch hwid=ui.toggle("Отправлять HWID",sub.optBoolean("sendHWID",state.optBoolean("sendHWID")),v->{});ui.add(form,hwid);ui.add(form,ui.text("HWID AURA: "+DeviceInfo.hwid(this)+"\nПосле сохранения обновите подписку. Идентификатор другого клиента не переносится автоматически.",12,ui.muted));new AlertDialog.Builder(this).setTitle("Настройки подписки").setView(form).setPositiveButton("Сохранить",(d,w)->safe(()->{sub.put("name",name.getText().toString().trim()).put("sendHWID",hwid.isChecked());save();render();})).setNegativeButton("Отмена",null).setNeutralButton("Удалить",(d,w)->safe(()->{requireOff();String id=sub.getString("id");remove(state.getJSONArray("subscriptions"),id);JSONArray ps=state.getJSONArray("profiles");for(int i=ps.length()-1;i>=0;i--)if(ps.getJSONObject(i).optString("subscription").equals(id))ps.remove(i);ensureSelection();save();render();})).show();}
     private void measure(JSONObject p)throws Exception{background(()->{long start=System.nanoTime();try(java.net.Socket socket=new java.net.Socket()){socket.connect(new InetSocketAddress(p.getString("host"),p.getInt("port")),5000);}return Math.max(1,(System.nanoTime()-start)/1_000_000);},ms->{p.put("latency",ms);save();render();message("TCP-задержка: "+ms+" ms. Это не тест скорости VPN. Hysteria2 использует UDP.");});}
     private String modeTitle(){switch(state.optString("mode")){case "global":return "Весь трафик";case "direct":return "Напрямую";default:return "По правилам";}}
