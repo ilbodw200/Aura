@@ -1,6 +1,7 @@
 import Foundation
 
 struct SubscriptionContents {
+    var usage: SubscriptionUsage?
     var profiles: [ProxyProfile]
     var warnings: [String]
     var skippedCount: Int = 0

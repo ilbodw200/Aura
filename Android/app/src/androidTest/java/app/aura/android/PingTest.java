@@ -12,6 +12,26 @@ import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class PingTest {
+    @Test public void captureLibraryAndSettingsScreens()throws Exception {
+        android.app.Instrumentation instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
+        android.content.Context context=instrumentation.getTargetContext();
+        JSONObject state=Core.defaults();JSONObject sub=Core.obj("id","preview-subscription","name","Пример подписки","url","https://example.invalid/subscription","updated",System.currentTimeMillis());
+        state.getJSONArray("subscriptions").put(sub);
+        for(int i=0;i<2;i++){
+            JSONObject profile=Core.link("socks5://server"+i+".example.invalid:1080#"+(i==0?"Amsterdam":"Helsinki"));
+            profile.put("subscription","preview-subscription");state.getJSONArray("profiles").put(profile);
+            if(i==0)state.put("selected",profile.getString("id"));
+        }
+        state.put("hideRecents",false);new Vault(context).save(state);
+        MainActivity activity=(MainActivity)instrumentation.startActivitySync(new android.content.Intent(context,MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+        instrumentation.waitForIdleSync();capture(instrumentation,"Aura-Library.png");
+        instrumentation.runOnMainSync(()->{try{java.lang.reflect.Method method=MainActivity.class.getDeclaredMethod("pingSettings");method.setAccessible(true);method.invoke(activity);}catch(Exception e){throw new RuntimeException(e);}});
+        instrumentation.waitForIdleSync();capture(instrumentation,"Aura-Ping.png");
+        instrumentation.runOnMainSync(activity::finish);new Vault(context).save(Core.defaults());
+    }
+    private static void capture(android.app.Instrumentation instrumentation,String file)throws Exception {
+        try(android.os.ParcelFileDescriptor fd=instrumentation.getUiAutomation().executeShellCommand("screencap -p /sdcard/"+file);java.io.FileInputStream input=new java.io.FileInputStream(fd.getFileDescriptor())){while(input.read()!=-1){}}
+    }
     // The destination does not resolve. Only a SOCKS connection can answer it.
     @Test public void getHeadAndReuseActuallyTraverseSelectedProxy()throws Exception {
         try(FakeProxy proxy=new FakeProxy()) {

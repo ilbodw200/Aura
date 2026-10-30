@@ -56,8 +56,8 @@ public final class MainActivity extends Activity {
     private LinearLayout info(LinearLayout parent,String title,String detail){LinearLayout card=ui.card(parent);ui.add(card,ui.title(title,16));if(!detail.isEmpty()){ui.space(card,7);ui.add(card,ui.text(detail,12,ui.muted));}return card;}
     private void home()throws Exception{
         LinearLayout tools=ui.line();tools.addView(button("⚙ Пинг",this::pingSettings),new LinearLayout.LayoutParams(0,-2,1));tools.addView(button("＋ Добавить",()->importDialog("")),new LinearLayout.LayoutParams(0,-2,1));ui.add(body,tools);
-        Ui.Orb orb=new Ui.Orb(ui,active());LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(ui.dp(248),ui.dp(248));op.gravity=Gravity.CENTER;body.addView(orb,op);orb.setOnClickListener(v->safe(this::toggleVPN));
-        statusText=ui.title(statusTitle(),18);statusText.setGravity(Gravity.CENTER);ui.add(body,statusText);timerText=ui.text(active()?"":"Нажмите, чтобы подключиться",12,ui.muted);timerText.setGravity(Gravity.CENTER);ui.add(body,timerText);ui.space(body,18);
+        FrameLayout orbFrame=new FrameLayout(this);Ui.Orb orb=new Ui.Orb(ui,active());orbFrame.addView(orb,new FrameLayout.LayoutParams(-1,-1));LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(ui.dp(268),ui.dp(268));op.gravity=Gravity.CENTER;body.addView(orbFrame,op);orb.setOnClickListener(v->safe(this::toggleVPN));
+        LinearLayout labels=ui.column();statusText=ui.title(statusTitle(),13);statusText.setGravity(Gravity.CENTER);ui.add(labels,statusText);timerText=ui.text(active()?"":"AURA 1.0",12,ui.muted);timerText.setGravity(Gravity.CENTER);ui.space(labels,5);ui.add(labels,timerText);FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(ui.dp(150),-2,Gravity.CENTER);labels.setTranslationY(ui.dp(34));orbFrame.addView(labels,lp);ui.space(body,12);
         LinearLayout quick=ui.line();quick.addView(button(busy?"Проверяем…":"Проверить соединение",()->{JSONObject profile=Core.selected(state);if(profile==null)throw new Exception("Выберите сервер.");measure(profile);}),new LinearLayout.LayoutParams(0,-2,1));quick.addView(button(collapseAll?"Показать все":"Скрыть все",()->{collapseAll=!collapseAll;collapsedGroups.clear();if(collapseAll){collapsedGroups.add("local");JSONArray subs=state.getJSONArray("subscriptions");for(int i=0;i<subs.length();i++)collapsedGroups.add(subs.getJSONObject(i).getString("id"));}render();}),new LinearLayout.LayoutParams(0,-2,1));ui.add(body,quick);ui.space(body,12);
         JSONObject ping=Ping.settings(state);ui.add(body,ui.text("Пинг: "+ping.getString("method")+" · "+ping.getInt("timeout")+" с",12,ui.muted));ui.space(body,12);
         serverGroup("local","Мои серверы",null);JSONArray subs=state.getJSONArray("subscriptions");for(int i=0;i<subs.length();i++){JSONObject sub=subs.getJSONObject(i);serverGroup(sub.getString("id"),sub.getString("name"),sub);}
@@ -75,7 +75,7 @@ public final class MainActivity extends Activity {
         if(sub!=null)header.addView(button("↻",()->refresh(sub)),new LinearLayout.LayoutParams(ui.dp(48),-2));
         header.addView(button("◴",()->measureGroup(profiles)),new LinearLayout.LayoutParams(ui.dp(48),-2));ui.add(c,header);
         if(collapsedGroups.contains(id))return;
-        if(sub!=null){ui.space(c,10);ui.add(c,ui.text((sub.getString("url").startsWith("https://")?"HTTPS · 🔒":"HTTP · без шифрования")+(sub.has("updated")?" · "+new java.text.SimpleDateFormat("dd.MM HH:mm",Locale.ROOT).format(new Date(sub.optLong("updated"))):""),11,ui.muted));if(sub.has("lastError"))ui.add(c,ui.text(sub.optString("lastError"),12,0xffffbb75));}
+        if(sub!=null){ui.space(c,10);ui.add(c,ui.text((sub.getString("url").startsWith("https://")?"HTTPS · 🔒":"HTTP · без шифрования")+(sub.has("updated")?" · "+new java.text.SimpleDateFormat("dd.MM HH:mm",Locale.ROOT).format(new Date(sub.optLong("updated"))):""),11,ui.muted));if(sub.has("lastError"))ui.add(c,ui.text(sub.optString("lastError"),12,0xffffbb75));String usage=SubscriptionUsage.summary(sub.optJSONObject("usage"));if(!usage.isEmpty())ui.add(c,ui.text(usage,12,ui.muted));}
         for(JSONObject p:profiles){ui.space(c,10);LinearLayout row=ui.line();String name=(p.getString("id").equals(state.optString("selected"))?"✓ ":"")+p.getString("name");LinearLayout label=ui.column();ui.add(label,ui.title(name,16));ui.add(label,ui.text(p.getString("type").toUpperCase(Locale.ROOT)+" | "+p.optJSONObject("query").optString("type","tcp").toUpperCase(Locale.ROOT),12,ui.muted));label.setOnClickListener(v->safe(()->select(p)));label.setOnLongClickListener(v->{profileMenu(p);return true;});row.addView(label,new LinearLayout.LayoutParams(0,-2,1));
             String result=p.has("pingError")?"Нет ответа":p.has("latency")?((Ping.settings(state).optBoolean("displayStatus")&&p.optInt("pingStatus")>0)?"HTTP "+p.optInt("pingStatus"):p.optInt("latency")+" мс")+"\n"+p.optString("pingMethod","TCP"):"Пинг";
             row.addView(button(result,()->measure(p)),new LinearLayout.LayoutParams(ui.dp(92),-2));ui.add(c,row);}
@@ -158,7 +158,7 @@ public final class MainActivity extends Activity {
         final boolean permit=sub.optBoolean("allowHTTP");busy=true;
         tasks.execute(()->{
             try {
-                List<JSONObject> incoming=Vault.fetch(url,headers,permit);
+                Vault.FetchResult response=Vault.fetchResult(url,headers,permit);List<JSONObject> incoming=response.profiles;
                 runOnUiThread(()->{
                     busy=false;if(isDestroyed())return;
                     try {
@@ -170,7 +170,7 @@ public final class MainActivity extends Activity {
                         for(JSONObject p:incoming){p.put("subscription",id);for(JSONObject previous:old){String previousId=previous.getString("id");if(!reused.contains(previousId)&&previous.getString("type").equals(p.getString("type"))&&previous.getString("host").equals(p.getString("host"))&&previous.getInt("port")==p.getInt("port")&&previous.getString("credential").equals(p.getString("credential"))&&previous.getJSONObject("query").toString().equals(p.getJSONObject("query").toString())){p.put("id",previousId).put("favorite",previous.optBoolean("favorite"));reused.add(previousId);break;}}}
                         for(int i=ps.length()-1;i>=0;i--)if(ps.getJSONObject(i).optString("subscription").equals(id))ps.remove(i);
                         for(JSONObject p:incoming)ps.put(p);
-                        current.remove("lastError");current.put("updated",System.currentTimeMillis());ensureSelection();save();render();
+                        current.remove("lastError");if(response.usage==null)current.remove("usage");else current.put("usage",response.usage);current.put("updated",System.currentTimeMillis());ensureSelection();save();render();
                         if(!quiet)message("Подписка обновлена: "+incoming.size()+" серверов.");
                     } catch(Exception e){subscriptionFailure(id,e,quiet);}
                 });

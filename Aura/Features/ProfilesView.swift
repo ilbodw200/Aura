@@ -93,7 +93,7 @@ struct ProfileRow: View {
                 Text(store.snapshot.appearance.showHost ? profile.subtitle : profile.kind.title).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)
-            if let ms = profile.latencyMS { Text("\(ms) ms").font(.system(.caption, design: .monospaced)).foregroundStyle(store.accent) }
+            if let ms = profile.latencyMS { Text("\(ms) мс · \(profile.pingMethod ?? "TCP")").font(.system(.caption, design: .monospaced)).foregroundStyle(store.accent) }
         }.padding(.vertical, store.snapshot.appearance.compact ? 3 : 9).contentShape(Rectangle())
     }
 }

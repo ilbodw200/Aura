@@ -4,6 +4,17 @@ import XCTest
 final class CoreTests: XCTestCase {
     private let uuid = "11111111-2222-4333-8444-555555555555"
 
+    func testSubscriptionUsageDoesNotInventLimits() {
+        XCTAssertNil(SubscriptionUsage.parse(nil))
+        XCTAssertNil(SubscriptionUsage.parse("upload=-5; download=abc"))
+        let value = SubscriptionUsage.parse("upload=100; download=200; total=0; expire=1900000000")
+        XCTAssertEqual(value?.used, 300)
+        XCTAssertEqual(value?.total, 0)
+        XCTAssertNotNil(value?.expire)
+        XCTAssertTrue(value?.summary?.contains("∞") == true)
+        XCTAssertNil(SubscriptionUsage.parse("upload=9223372036854775807; download=1")?.used)
+    }
+
     func testPingSettingsMigrationAndValidation() throws {
         let old = AppSnapshot()
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])

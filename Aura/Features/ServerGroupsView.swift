@@ -38,6 +38,10 @@ private struct ServerGroupCard: View {
             if expanded {
                 if let subscription {
                     VStack(alignment: .leading, spacing: 6) {
+                        if let usage = subscription.usage {
+                            if let summary = usage.summary { Label(summary, systemImage: "chart.bar.fill").font(.caption) }
+                            if let date = usage.expire { Text("Истекает: \(date.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(date < .now ? .orange : .secondary) }
+                        }
                         HStack { Label(subscription.url.scheme == "https" ? "HTTPS" : "HTTP", systemImage: subscription.url.scheme == "https" ? "lock.fill" : "lock.open"); Spacer(); if let date = subscription.updatedAt { Text(date.formatted(date: .abbreviated, time: .shortened)) } }.font(.caption2).foregroundStyle(.secondary)
                         if let error = subscription.lastError { Text(error).font(.caption).foregroundStyle(.orange) }
                         if let warning = subscription.lastWarning { Text(warning).font(.caption).foregroundStyle(.orange) }

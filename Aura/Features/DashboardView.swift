@@ -45,22 +45,21 @@ struct DashboardView: View {
                         Circle().stroke(store.accent.opacity(0.08 + Double(index) * 0.04), lineWidth: 1)
                             .frame(width: CGFloat(244 - index * 23), height: CGFloat(244 - index * 23))
                     }
-                    Circle().fill(RadialGradient(colors: [store.accent.opacity(0.28), store.accent.opacity(0.03)], center: .topLeading, startRadius: 10, endRadius: 180)).frame(width: 170, height: 170)
+                    Circle().fill(RadialGradient(colors: [store.accent.opacity(0.28), store.accent.opacity(0.03)], center: .topLeading, startRadius: 10, endRadius: 180)).frame(width: 190, height: 190)
                     Image(systemName: "power")
                         .font(.system(size: 48, weight: .light)).foregroundStyle(store.accent)
-                        .frame(width: 156, height: 156).auraGlass(tint: store.accent.opacity(0.12), interactive: true, radius: 78)
+                        .offset(y: -27)
+                    VStack(spacing: 5) {
+                        Text(store.tunnel.title).font(.system(size: 13, weight: .semibold))
+                        if let start = store.tunnel.connectedAt, store.tunnel.status == .connected { Text(start, style: .timer).monospacedDigit().font(.caption) }
+                        else { Text("AURA 1.0").font(.caption2).foregroundStyle(.secondary) }
+                    }.offset(y: 37)
                     if store.busy { ProgressView().offset(y: 54).tint(store.accent) }
                 }.frame(height: 245)
                     .scaleEffect(store.tunnel.active ? 1.035 : 1)
                     .animation(systemReduceMotion || store.snapshot.appearance.reduceMotion ? nil : .spring(duration: 0.65), value: store.tunnel.active)
             }.buttonStyle(.plain).disabled(store.busy || store.tunnel.status == .disconnecting)
                 .accessibilityLabel(store.tunnel.active ? "Отключить VPN" : "Подключить VPN")
-            VStack(spacing: 7) {
-                HStack(spacing: 7) { Circle().fill(store.tunnel.status == .connected ? store.accent : .secondary).frame(width: 6, height: 6); Text(store.tunnel.title).font(.title3.weight(.semibold)) }
-                if let start = store.tunnel.connectedAt, store.tunnel.status == .connected {
-                    Text(start, style: .timer).font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
-                } else { Text(store.selected == nil ? "Добавьте сервер, чтобы начать" : "Нажмите, чтобы подключиться").font(.caption).foregroundStyle(.secondary) }
-            }
         }.padding(.bottom, 4)
     }
     private var serverCard: some View {

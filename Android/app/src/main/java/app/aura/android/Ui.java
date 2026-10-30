@@ -32,8 +32,8 @@ final class Ui {
         @Override protected void onDraw(Canvas canvas){super.onDraw(canvas);float x=getWidth()/2f,y=getHeight()/2f,r=Math.min(x,y)*.84f;
             p.setShader(new RadialGradient(x,y,r,new int[]{ui.alpha(ui.accent,active?70:40),ui.alpha(ui.accent,0)},null,Shader.TileMode.CLAMP));p.setStyle(Paint.Style.FILL);canvas.drawCircle(x,y,r,p);p.setShader(null);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(ui.dp(1));for(int i=0;i<3;i++){p.setColor(ui.alpha(ui.accent,25+i*10));canvas.drawCircle(x,y,r*(1-i*.1f),p);}
-            float inner=r*.64f;p.setStyle(Paint.Style.FILL);p.setShader(new LinearGradient(x-inner,y-inner,x+inner,y+inner,new int[]{ui.alpha(ui.accent,65),ui.alpha(ui.accent,10)},null,Shader.TileMode.CLAMP));canvas.drawCircle(x,y,inner,p);p.setShader(null);p.setStyle(Paint.Style.STROKE);p.setColor(ui.alpha(ui.accent,100));p.setStrokeWidth(ui.dp(1));canvas.drawCircle(x,y,inner,p);
-            p.setColor(ui.accent);p.setStrokeWidth(ui.dp(4));p.setStrokeCap(Paint.Cap.ROUND);float symbol=r*.23f;canvas.drawArc(new RectF(x-symbol,y-symbol,x+symbol,y+symbol),-45,270,false,p);canvas.drawLine(x,y-symbol*1.25f,x,y-symbol*.1f,p);
+            float inner=r*.77f;p.setStyle(Paint.Style.FILL);p.setShader(new LinearGradient(x-inner,y-inner,x+inner,y+inner,new int[]{ui.alpha(ui.accent,65),ui.alpha(ui.accent,10)},null,Shader.TileMode.CLAMP));canvas.drawCircle(x,y,inner,p);p.setShader(null);p.setStyle(Paint.Style.STROKE);p.setColor(ui.alpha(ui.accent,100));p.setStrokeWidth(ui.dp(1));canvas.drawCircle(x,y,inner,p);
+            p.setColor(ui.accent);p.setStrokeWidth(ui.dp(4));p.setStrokeCap(Paint.Cap.ROUND);y-=ui.dp(24);float symbol=r*.20f;canvas.drawArc(new RectF(x-symbol,y-symbol,x+symbol,y+symbol),-45,270,false,p);canvas.drawLine(x,y-symbol*1.25f,x,y-symbol*.1f,p);
         }
     }
 }

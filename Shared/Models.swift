@@ -34,6 +34,7 @@ struct ProxyProfile: Codable, Identifiable, Equatable {
 }
 
 struct Subscription: Codable, Identifiable {
+    var usage: SubscriptionUsage?
     var id = UUID()
     var name: String
     var url: URL

@@ -86,6 +86,8 @@ jobs:
           disable-animations: true
           script: |
             gradle -p Android --no-daemon connectedDebugAndroidTest
+            adb pull /sdcard/Aura-Library.png Aura-Library.png
+            adb pull /sdcard/Aura-Ping.png Aura-Ping.png
             if adb shell pm list packages | grep -qx 'package:app.aura.android'; then adb uninstall app.aura.android; fi
             adb install Android/app/build/outputs/apk/release/app-release.apk
             adb shell am start -W -n app.aura.android/.MainActivity
@@ -108,4 +110,6 @@ jobs:
             Android/app/build/reports/
             Android/app/build/outputs/androidTest-results/
             Aura-Android.png
+            Aura-Library.png
+            Aura-Ping.png
             Android-launch.log

@@ -80,7 +80,8 @@ final class AppStore {
         guard !snapshot.subscriptions.contains(where: { $0.url == url }) else { throw AuraError.message("Эта подписка уже добавлена. Обновите её во вкладке «Серверы».") }
         guard snapshot.profiles.count + (contents?.profiles.count ?? 0) <= 1000 else { throw AuraError.message("Достигнут лимит 1000 профилей.") }
         let subscription = Subscription(name: name, url: url, updatedAt: contents == nil ? nil : .now, sendHWID: url.scheme?.lowercased() == "https" && sendHWID, allowHTTP: allowHTTP, lastWarning: contents?.warnings.isEmpty == false ? contents?.warnings.prefix(5).joined(separator: "\n") : nil)
-        snapshot.subscriptions.append(subscription)
+        var savedSubscription = subscription; savedSubscription.usage = contents?.usage
+        snapshot.subscriptions.append(savedSubscription)
         if let contents {
             var profiles = contents.profiles
             for index in profiles.indices { profiles[index].subscriptionID = subscription.id }
@@ -115,7 +116,7 @@ final class AppStore {
             guard snapshot.profiles.count - old.count + incoming.count + retained.count <= 1000 else { throw AuraError.message("Достигнут лимит 1000 профилей.") }
             snapshot.profiles.removeAll { $0.subscriptionID == id }; snapshot.profiles += incoming + retained
             if !snapshot.profiles.contains(where: { $0.id == snapshot.selectedID }) { snapshot.selectedID = incoming.first?.id }
-            if let index = snapshot.subscriptions.firstIndex(where: { $0.id == id }) { snapshot.subscriptions[index].updatedAt = .now; snapshot.subscriptions[index].lastError = nil; snapshot.subscriptions[index].lastWarning = result.warnings.isEmpty ? nil : result.warnings.prefix(5).joined(separator: "\n") }
+            if let index = snapshot.subscriptions.firstIndex(where: { $0.id == id }) { snapshot.subscriptions[index].usage = result.usage; snapshot.subscriptions[index].updatedAt = .now; snapshot.subscriptions[index].lastError = nil; snapshot.subscriptions[index].lastWarning = result.warnings.isEmpty ? nil : result.warnings.prefix(5).joined(separator: "\n") }
             persist(); log("Подписка обновлена: \(incoming.count) серверов.")
         } catch {
             // URLs may contain provider tokens; never put raw network errors into the UI log.

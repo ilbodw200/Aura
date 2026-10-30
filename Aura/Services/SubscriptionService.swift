@@ -29,7 +29,9 @@ enum SubscriptionService {
             guard data.count <= 2_000_000 else { throw AuraError.message("Подписка превышает 2 МБ.") }
         }
         guard let text = String(data: data, encoding: .utf8) else { throw AuraError.message("Подписка должна содержать текст UTF-8.") }
-        return try SubscriptionDocument.parse(text)
+        var result = try SubscriptionDocument.parse(text)
+        result.usage = SubscriptionUsage.parse(http.value(forHTTPHeaderField: "subscription-userinfo"))
+        return result
     }
     static func message(for error: Error) -> String {
         if let error = error as? AuraError { return error.localizedDescription }
