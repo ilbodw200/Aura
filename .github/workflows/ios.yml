@@ -10,7 +10,7 @@ on:
       runner:
         description: macOS build pool
         type: choice
-        options: [macos-26, macos-15]
+        options: [macos-26, macos-15, macos-15-intel]
         default: macos-26
 jobs:
   test:
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode 26 on fallback runner
-        if: inputs.runner == 'macos-15'
+        if: startsWith(inputs.runner, 'macos-15')
         run: echo 'DEVELOPER_DIR=/Applications/Xcode_26.2.app/Contents/Developer' >> "$GITHUB_ENV"
       - name: Generate UI project
         run: |
