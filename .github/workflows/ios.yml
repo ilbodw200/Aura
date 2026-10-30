@@ -6,11 +6,20 @@ on:
   pull_request:
     paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
   workflow_dispatch:
+    inputs:
+      runner:
+        description: macOS build pool
+        type: choice
+        options: [macos-26, macos-15]
+        default: macos-26
 jobs:
   test:
-    runs-on: macos-26
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode 26 on fallback runner
+        if: inputs.runner == 'macos-15'
+        run: echo 'DEVELOPER_DIR=/Applications/Xcode_26.2.app/Contents/Developer' >> "$GITHUB_ENV"
       - name: Generate UI project
         run: |
           brew install xcodegen
