@@ -22,6 +22,9 @@ enum ConfigBuilder {
     static func build(profile: ProxyProfile, snapshot: AppSnapshot) throws -> Data {
         try validate(profile)
         guard !profile.isExample else { throw AuraError.message("Это пример оформления. Импортируйте собственный сервер.") }
+        guard !["0.0.0.0", "::"].contains(profile.host) else {
+            throw AuraError.message("Провайдер вернул служебный профиль вместо сервера. Включите «Отправлять HWID» в настройках подписки и обновите её. Если это не помогает, уточните привязку устройства у провайдера.")
+        }
         var outbound: [String: Any] = ["type": profile.kind.rawValue, "tag": "proxy", "server": profile.host, "server_port": profile.port]
         switch profile.kind {
         case .vless: outbound["uuid"] = profile.credential; outbound["flow"] = profile.query["flow"] ?? ""

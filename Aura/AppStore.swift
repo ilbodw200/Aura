@@ -74,7 +74,8 @@ final class AppStore {
         busy = true; defer { busy = false }
         do {
             try requireDisconnected()
-            var incoming = try await SubscriptionService.fetch(subscription.url)
+            let metadata = (subscription.sendHWID ?? snapshot.sendHWID ?? false) ? try DeviceIdentity.metadata() : nil
+            var incoming = try await SubscriptionService.fetch(subscription.url, metadata: metadata)
             // The user may have connected while the network request was running.
             try requireDisconnected()
             guard snapshot.subscriptions.contains(where: { $0.id == id }) else { return }

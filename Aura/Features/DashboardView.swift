@@ -12,7 +12,7 @@ struct DashboardView: View {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 5) {
                         Text("ВАШЕ СОЕДИНЕНИЕ. ВАШИ ПРАВИЛА.").font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1.7).foregroundStyle(.secondary)
-                        Text("Пространство\nбез границ.").font(.system(size: 36, weight: .semibold, design: .rounded)).tracking(-1.3)
+                        Text("Пространство\nбез границ.").font(.system(size: 32, weight: .semibold, design: .rounded)).tracking(-1).fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 0)
                     Button { openSheet(.scanner) } label: { Image(systemName: "qrcode.viewfinder").font(.title3).frame(width: 48, height: 48).auraGlass(interactive: true, radius: 18) }.accessibilityLabel("Сканировать QR-код")
@@ -32,7 +32,7 @@ struct DashboardView: View {
                     }
                 }
                 Text("PRIVATE BY DESIGN · MADE FOR YOU").font(.system(size: 9, design: .monospaced)).tracking(2).foregroundStyle(.tertiary).padding(.vertical, 8)
-            }.padding(22).frame(maxWidth: 620).frame(maxWidth: .infinity)
+            }.padding(22).padding(.top, 8).frame(maxWidth: 620).frame(maxWidth: .infinity)
             }
         }
         .auraPage()

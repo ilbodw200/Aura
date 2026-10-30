@@ -9,7 +9,12 @@ final class TunnelController {
     var lastError: String?
     private var manager: NETunnelProviderManager?
     private var tunnelBundleID: String {
-        Bundle.main.object(forInfoDictionaryKey: "AuraTunnelBundleIdentifier") as? String ?? "app.aura.proxy.tunnel"
+        // Signing tools can rename the extension. Read its actual embedded ID.
+        if let directory = Bundle.main.builtInPlugInsURL,
+           let extensions = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil),
+           let url = extensions.first(where: { $0.lastPathComponent == "AuraTunnel.appex" }),
+           let identifier = Bundle(url: url)?.bundleIdentifier { return identifier }
+        return Bundle.main.object(forInfoDictionaryKey: "AuraTunnelBundleIdentifier") as? String ?? "app.aura.proxy.tunnel"
     }
     @ObservationIgnored private var observation: VPNStatusObservation?
     var active: Bool { status == .connected || status == .connecting || status == .reasserting }
@@ -45,13 +50,13 @@ final class TunnelController {
     }
     func connect(profile: ProxyProfile, snapshot: AppSnapshot) async throws {
         let data = try ConfigBuilder.build(profile: profile, snapshot: snapshot)
-        let directory = try SharedContainer.directory()
-        try data.write(to: directory.appendingPathComponent("active.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        let configuration = String(decoding: data, as: UTF8.self)
         let tunnel = manager ?? NETunnelProviderManager()
         let config = NETunnelProviderProtocol()
         config.providerBundleIdentifier = tunnelBundleID
         config.serverAddress = profile.host
         config.disconnectOnSleep = false
+        config.providerConfiguration = [TunnelPayload.key: configuration]
         tunnel.protocolConfiguration = config
         tunnel.localizedDescription = "AURA"
         tunnel.isEnabled = true
@@ -63,7 +68,7 @@ final class TunnelController {
         try await tunnel.saveToPreferences()
         try await tunnel.loadFromPreferences()
         manager = tunnel
-        try tunnel.connection.startVPNTunnel()
+        try tunnel.connection.startVPNTunnel(options: [TunnelPayload.key: configuration as NSString])
         refreshStatus()
     }
     func disconnect() async throws {

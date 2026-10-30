@@ -15,8 +15,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         worker.async { [self] in
             #if canImport(Libbox)
             do {
-                let directory = try SharedContainer.directory()
-                let config = try String(contentsOf: directory.appendingPathComponent("active.json"), encoding: .utf8)
+                let saved = (protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration
+                let config = try TunnelPayload.configuration(options: options, saved: saved)
+                let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("AuraCore", isDirectory: true)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
                 let setup = LibboxSetupOptions()
                 setup.basePath = directory.path
                 setup.workingPath = directory.appendingPathComponent("work").path

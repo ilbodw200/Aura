@@ -12,6 +12,7 @@ let package = Package(
             "Aura/AppStore.swift", "Aura/AuraApp.swift", "Aura/RootView.swift",
             "Aura/Services/LatencyService.swift", "Aura/Services/SubscriptionService.swift",
             "Aura/Services/TunnelController.swift", "Aura.xcodeproj", "Build IPA.command",
+            "Aura/Services/DeviceIdentity.swift", "Android",
             "Config", "Docs", "Scripts", "Tests", "Tunnel", "LICENSE", "README.md",
             "THIRD_PARTY_NOTICES.md", "project.yml", "project-core.yml"
         ], sources: ["Shared", "Aura/Services/SecureStore.swift"]),

@@ -85,4 +85,37 @@ final class CoreTests: XCTestCase {
         let example = ProxyProfile(name: "Example", kind: .trojan, host: "example.invalid", port: 443, credential: "sample", isExample: true)
         XCTAssertThrowsError(try ConfigBuilder.build(profile: example, snapshot: AppSnapshot()))
     }
+
+    func testVPNConfigurationHandoffWithoutAppGroup() throws {
+        let profile = try ProfileParser.parseLink("trojan://secret@example.com:443")
+        let json = String(decoding: try ConfigBuilder.build(profile: profile, snapshot: AppSnapshot()), as: UTF8.self)
+        XCTAssertEqual(try TunnelPayload.configuration(options: [TunnelPayload.key: json as NSString], saved: nil), json)
+        XCTAssertEqual(try TunnelPayload.configuration(options: nil, saved: [TunnelPayload.key: json]), json)
+        XCTAssertThrowsError(try TunnelPayload.configuration(options: nil, saved: nil))
+        XCTAssertThrowsError(try TunnelPayload.configuration(options: [TunnelPayload.key: "{}" as NSString], saved: nil))
+        let stub = ProxyProfile(name: "В настройках программы", kind: .vless, host: "0.0.0.0", port: 1, credential: uuid)
+        XCTAssertThrowsError(try ConfigBuilder.build(profile: stub, snapshot: AppSnapshot()))
+    }
+
+    func testHWIDHeadersAreOptInAndRedirectsAreScoped() throws {
+        let url = try XCTUnwrap(URL(string: "https://provider.example/sub"))
+        let plain = try SubscriptionRequest.make(url: url)
+        XCTAssertNil(plain.value(forHTTPHeaderField: "X-HWID"))
+        let metadata = DeviceMetadata(hwid: "test-device", os: "iOS", osVersion: "26.0", model: "iPhone", deviceInfo: "AURA; iPhone; iOS 26.0")
+        let request = try SubscriptionRequest.make(url: url, metadata: metadata)
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-HWID"), "test-device")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-OS"), "iOS")
+        XCTAssertEqual(SubscriptionRequest.redirect(request, from: url)?.value(forHTTPHeaderField: "X-HWID"), "test-device")
+        var other = request; other.url = URL(string: "https://other.example/sub")
+        XCTAssertNil(SubscriptionRequest.redirect(other, from: url)?.value(forHTTPHeaderField: "X-HWID"))
+        other.url = URL(string: "http://provider.example/sub")
+        XCTAssertNil(SubscriptionRequest.redirect(other, from: url))
+    }
+
+    func testOldSnapshotsLoadWithHWIDDisabled() throws {
+        let data = try JSONEncoder().encode(AppSnapshot())
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        json.removeValue(forKey: "sendHWID")
+        XCTAssertNil(try JSONDecoder().decode(AppSnapshot.self, from: JSONSerialization.data(withJSONObject: json)).sendHWID)
+    }
 }

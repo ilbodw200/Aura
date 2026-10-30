@@ -7,6 +7,7 @@ struct ProfilesView: View {
     @State private var favoritesOnly = false
     @State private var sortLatency = false
     @State private var editing: ProxyProfile?
+    @State private var editingSubscription: Subscription?
     private var profiles: [ProxyProfile] {
         let profiles = store.snapshot.profiles.filter { (!favoritesOnly || $0.favorite) && (search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) || $0.kind.title.localizedCaseInsensitiveContains(search) || (store.snapshot.appearance.showHost && $0.host.localizedCaseInsensitiveContains(search))) }
         return sortLatency ? profiles.sorted { ($0.latencyMS ?? Int.max) < ($1.latencyMS ?? Int.max) } : profiles
@@ -32,6 +33,7 @@ struct ProfilesView: View {
                                 else { Text("Ещё не обновлялась").font(.caption).foregroundStyle(.secondary) }
                             }
                             Spacer()
+                            Button { editingSubscription = subscription } label: { Image(systemName: "slider.horizontal.3").frame(width: 44, height: 44) }.buttonStyle(.borderless).accessibilityLabel("Настройки подписки \(subscription.name)")
                             Button { Task { await store.refreshSubscription(subscription.id) } } label: { Image(systemName: "arrow.clockwise").frame(width: 44, height: 44) }.buttonStyle(.borderless).disabled(store.busy).accessibilityLabel("Обновить \(subscription.name)")
                         }.swipeActions {
                             Button("Удалить", role: .destructive) { removeSubscription(subscription.id) }
@@ -65,6 +67,7 @@ struct ProfilesView: View {
             ToolbarItem(placement: .topBarTrailing) { Button("Добавить", systemImage: "plus") { openSheet(.importer) } }
         }
         .sheet(item: $editing) { ProfileEditor(profile: $0) }
+        .sheet(item: $editingSubscription) { SubscriptionEditor(subscription: $0) }
     }
     private func removeSubscription(_ id: UUID) {
         do {

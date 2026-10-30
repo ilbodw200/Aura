@@ -37,6 +37,7 @@ struct Subscription: Codable, Identifiable {
     var url: URL
     var updatedAt: Date?
     var lastError: String?
+    var sendHWID: Bool?
 }
 
 enum RouteAction: String, Codable, CaseIterable, Identifiable {
@@ -134,6 +135,7 @@ struct AppSnapshot: Codable {
     var bypassLAN = true
     var onDemand = false
     var hideInSwitcher = true
+    var sendHWID: Bool?
 }
 
 enum AuraError: LocalizedError {
