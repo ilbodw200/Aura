@@ -13,15 +13,15 @@ function files(directory) {
   return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap(entry => entry.isDirectory() && !entry.name.endsWith('.xcassets') ? files(`${directory}/${entry.name}`) : [`${directory}/${entry.name}`]);
 }
 const shared = files('Shared').filter(x => x.endsWith('.swift'));
-const sourceFiles = { Aura: [...files('Aura').filter(x => x.endsWith('.swift')), ...shared], AuraTunnel: [...files('Tunnel').filter(x => x.endsWith('.swift')), ...shared], AuraTests: files('Tests').filter(x => x.endsWith('.swift')) };
+const sourceFiles = { Aura: [...files('Aura').filter(x => x.endsWith('.swift')), ...shared], AuraTunnel: [...files('Tunnel').filter(x => x.endsWith('.swift')), ...shared], AuraTests: files('Tests').filter(x => x.endsWith('.swift')), AuraUITests: files('UITests').filter(x => x.endsWith('.swift')) };
 const allFiles = [...new Set(Object.values(sourceFiles).flat()), 'Aura/Assets.xcassets', 'Config/App-Info.plist', 'Config/Tunnel-Info.plist', 'Config/App.entitlements', 'Config/Tunnel.entitlements'];
 for (const file of allFiles) object(`file:${file}`, 'PBXFileReference', `lastKnownFileType = ${file.endsWith('.swift') ? 'sourcecode.swift' : file.endsWith('.xcassets') ? 'folder.assetcatalog' : 'text.plist.xml'}; path = ${quote(file)}; sourceTree = "<group>";`);
-const productTypes = { Aura: ['app', 'wrapper.application', 'com.apple.product-type.application'], AuraTunnel: ['appex', 'wrapper.app-extension', 'com.apple.product-type.app-extension'], AuraTests: ['xctest', 'wrapper.cfbundle', 'com.apple.product-type.bundle.unit-test'] };
+const productTypes = { Aura: ['app', 'wrapper.application', 'com.apple.product-type.application'], AuraTunnel: ['appex', 'wrapper.app-extension', 'com.apple.product-type.app-extension'], AuraTests: ['xctest', 'wrapper.cfbundle', 'com.apple.product-type.bundle.unit-test'], AuraUITests: ['xctest', 'wrapper.cfbundle', 'com.apple.product-type.bundle.ui-testing'] };
 for (const [name, [ext, type]] of Object.entries(productTypes)) object(`product:${name}`, 'PBXFileReference', `explicitFileType = ${type}; includeInIndex = 0; path = ${name}.${ext}; sourceTree = BUILT_PRODUCTS_DIR;`);
 object('products', 'PBXGroup', `children = (${Object.keys(productTypes).map(x => id(`product:${x}`)).join(',')}); name = Products; sourceTree = "<group>";`);
 object('rootgroup', 'PBXGroup', `children = (${allFiles.map(x => id(`file:${x}`)).join(',')},${id('products')}); sourceTree = "<group>";`);
-const common = { SWIFT_VERSION: '5.0', IPHONEOS_DEPLOYMENT_TARGET: '17.0', SDKROOT: 'iphoneos', TARGETED_DEVICE_FAMILY: '1,2', CODE_SIGN_STYLE: 'Automatic', DEVELOPMENT_TEAM: '', CURRENT_PROJECT_VERSION: '5', MARKETING_VERSION: '1.0.1', AURA_BUNDLE_ID: 'app.aura.proxy', AURA_TUNNEL_BUNDLE_ID: '$(AURA_BUNDLE_ID).tunnel', AURA_APP_GROUP: 'group.$(AURA_BUNDLE_ID)', CLANG_ENABLE_MODULES: 'YES', ENABLE_USER_SCRIPT_SANDBOXING: 'YES' };
-const settings = { Aura: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_BUNDLE_ID)', INFOPLIST_FILE: 'Config/App-Info.plist', CODE_SIGN_ENTITLEMENTS: 'Config/App.entitlements', ASSETCATALOG_COMPILER_APPICON_NAME: 'AppIcon' }, AuraTunnel: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_TUNNEL_BUNDLE_ID)', INFOPLIST_FILE: 'Config/Tunnel-Info.plist', CODE_SIGN_ENTITLEMENTS: 'Config/Tunnel.entitlements', APPLICATION_EXTENSION_API_ONLY: 'YES', SKIP_INSTALL: 'YES' }, AuraTests: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_BUNDLE_ID).tests', GENERATE_INFOPLIST_FILE: 'YES', TEST_HOST: '$(BUILT_PRODUCTS_DIR)/Aura.app/Aura', BUNDLE_LOADER: '$(TEST_HOST)' } };
+const common = { SWIFT_VERSION: '5.0', IPHONEOS_DEPLOYMENT_TARGET: '17.0', SDKROOT: 'iphoneos', TARGETED_DEVICE_FAMILY: '1,2', CODE_SIGN_STYLE: 'Automatic', DEVELOPMENT_TEAM: '', CURRENT_PROJECT_VERSION: '6', MARKETING_VERSION: '1.0.2', AURA_BUNDLE_ID: 'app.aura.proxy', AURA_TUNNEL_BUNDLE_ID: '$(AURA_BUNDLE_ID).tunnel', AURA_APP_GROUP: 'group.$(AURA_BUNDLE_ID)', CLANG_ENABLE_MODULES: 'YES', ENABLE_USER_SCRIPT_SANDBOXING: 'YES' };
+const settings = { AuraUITests: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_BUNDLE_ID).uitests', GENERATE_INFOPLIST_FILE: 'YES', TEST_TARGET_NAME: 'Aura' }, Aura: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_BUNDLE_ID)', INFOPLIST_FILE: 'Config/App-Info.plist', CODE_SIGN_ENTITLEMENTS: 'Config/App.entitlements', ASSETCATALOG_COMPILER_APPICON_NAME: 'AppIcon' }, AuraTunnel: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_TUNNEL_BUNDLE_ID)', INFOPLIST_FILE: 'Config/Tunnel-Info.plist', CODE_SIGN_ENTITLEMENTS: 'Config/Tunnel.entitlements', APPLICATION_EXTENSION_API_ONLY: 'YES', SKIP_INSTALL: 'YES' }, AuraTests: { PRODUCT_BUNDLE_IDENTIFIER: '$(AURA_BUNDLE_ID).tests', GENERATE_INFOPLIST_FILE: 'YES', TEST_HOST: '$(BUILT_PRODUCTS_DIR)/Aura.app/Aura', BUNDLE_LOADER: '$(TEST_HOST)' } };
 function configList(key, extra = {}) {
   for (const mode of ['Debug', 'Release']) {
     const value = { ...common, SWIFT_OPTIMIZATION_LEVEL: mode === 'Debug' ? '-Onone' : '-O', DEBUG_INFORMATION_FORMAT: mode === 'Debug' ? 'dwarf' : 'dwarf-with-dsym', ENABLE_TESTABILITY: mode === 'Debug' ? 'YES' : 'NO', ...extra };
@@ -33,7 +33,7 @@ function configList(key, extra = {}) {
 configList('project');
 object('embed:tunnel', 'PBXBuildFile', `fileRef = ${id('product:AuraTunnel')}; settings = {ATTRIBUTES = (RemoveHeadersOnCopy,);};`);
 object('embed:phase', 'PBXCopyFilesBuildPhase', `buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (${id('embed:tunnel')}); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0;`);
-for (const [from, to] of [['Aura','AuraTunnel'], ['AuraTests','Aura']]) {
+for (const [from, to] of [['Aura','AuraTunnel'], ['AuraTests','Aura'], ['AuraUITests','Aura']]) {
   object(`proxy:${from}:${to}`, 'PBXContainerItemProxy', `containerPortal = ${id('project')}; proxyType = 1; remoteGlobalIDString = ${id(`target:${to}`)}; remoteInfo = ${to};`);
   object(`dependency:${from}:${to}`, 'PBXTargetDependency', `target = ${id(`target:${to}`)}; targetProxy = ${id(`proxy:${from}:${to}`)};`);
 }
@@ -44,7 +44,7 @@ for (const name of Object.keys(productTypes)) {
   const resources = name === 'Aura' ? [object('assets:build', 'PBXBuildFile', `fileRef = ${id('file:Aura/Assets.xcassets')};`)] : [];
   object(`resources:${name}`, 'PBXResourcesBuildPhase', `buildActionMask = 2147483647; files = (${resources.join(',')}); runOnlyForDeploymentPostprocessing = 0;`);
   object(`frameworks:${name}`, 'PBXFrameworksBuildPhase', 'buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;');
-  const dependencies = name === 'Aura' ? [id('dependency:Aura:AuraTunnel')] : name === 'AuraTests' ? [id('dependency:AuraTests:Aura')] : [];
+  const dependencies = name === 'Aura' ? [id('dependency:Aura:AuraTunnel')] : name === 'AuraTests' || name === 'AuraUITests' ? [id(`dependency:${name}:Aura`)] : [];
   const phases = ['sources','frameworks','resources'].map(x => id(`${x}:${name}`));
   if (name === 'Aura') phases.push(id('embed:phase'));
   object(`target:${name}`, 'PBXNativeTarget', `buildConfigurationList = ${id(`configs:${name}`)}; buildPhases = (${phases.join(',')}); buildRules = (); dependencies = (${dependencies.join(',')}); name = ${name}; productName = ${name}; productReference = ${id(`product:${name}`)}; productType = ${quote(productTypes[name][2])};`);
@@ -65,4 +65,10 @@ fs.writeFileSync(path.join(directory,'xcshareddata/xcschemes/Aura.xcscheme'), `<
 <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">${ref('Aura')}</BuildableProductRunnable></ProfileAction>
 <AnalyzeAction buildConfiguration="Debug"/><ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
 </Scheme>`);
-console.log(`Generated Aura.xcodeproj: ${allFiles.length} references, 3 targets, shared Aura scheme. UI configuration; no VPN core.`);
+fs.writeFileSync(path.join(directory, 'xcshareddata/xcschemes/AuraScrolling.xcscheme'), `<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="2600" version="1.3">
+<BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">${ref('Aura')}</BuildActionEntry><BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="NO">${ref('AuraUITests')}</BuildActionEntry></BuildActionEntries></BuildAction>
+<TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB"><Testables><TestableReference skipped="NO">${ref('AuraUITests')}</TestableReference></Testables></TestAction>
+<LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB"><BuildableProductRunnable runnableDebuggingMode="0">${ref('Aura')}</BuildableProductRunnable></LaunchAction>
+</Scheme>`);
+console.log(`Generated Aura.xcodeproj: ${allFiles.length} references, 4 targets, shared Aura and AuraScrolling schemes. UI configuration; no VPN core.`);

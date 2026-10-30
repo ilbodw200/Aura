@@ -3,37 +3,81 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
-    @State private var collapsed = false
+    @State private var collapsedGroups: Set<String> = []
     let openSheet: (AppSheet) -> Void
     let showServers: () -> Void
     var body: some View {
-        ScrollView {
-            GlassGroup {
-            VStack(spacing: 22) {
-                connectionOrb
-                HStack {
-                    Button("Проверить соединение") {
-                        guard let profile = store.selected else { openSheet(.importer); return }
-                        Task { await store.measure(profile) }
-                    }.disabled(store.selected.map { store.probing.contains($0.id) } ?? false)
-                    Spacer()
-                    Button(collapsed ? "Показать все" : "Скрыть все") { collapsed.toggle() }
-                }.font(.caption.weight(.medium))
-                HStack { Button { openSheet(.ping) } label: { Label("Пинг: \((store.snapshot.ping ?? PingSettings()).method.title)", systemImage: "speedometer") }; Spacer(); if store.batchProbing { ProgressView(); Button(store.cancelBatch ? "Останавливаем…" : "Стоп") { store.cancelBatch = true }.disabled(store.cancelBatch) } }.font(.caption).foregroundStyle(.secondary)
-                ForEach(store.snapshot.appearance.widgets.filter { !store.snapshot.appearance.hiddenWidgets.contains($0) }) { widget in
-                    switch widget {
-                    case .server: ServerGroupsView(collapsed: collapsed)
-                    case .routing: routingCard
-                    case .favorites: favoritesCard
+        ScrollViewReader { proxy in
+            dashboardList
+                .clipped()
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    connectionDock {
+                        if systemReduceMotion || store.snapshot.appearance.reduceMotion { proxy.scrollTo("dashboard.top", anchor: .top) }
+                        else { withAnimation { proxy.scrollTo("dashboard.top", anchor: .top) } }
                     }
                 }
-                Text("PRIVATE BY DESIGN · MADE FOR YOU").font(.system(size: 9, design: .monospaced)).tracking(2).foregroundStyle(.tertiary).padding(.vertical, 8)
-            }.padding(22).padding(.top, 8).frame(maxWidth: 620).frame(maxWidth: .infinity)
-            }
         }
         .auraPage()
         .navigationTitle("AURA").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarLeading) { Button { openSheet(.ping) } label: { Image(systemName: "gearshape") }.accessibilityLabel("Настройки пинга") }; ToolbarItem(placement: .topBarTrailing) { Button { openSheet(.importer) } label: { Image(systemName: "plus") }.accessibilityLabel("Добавить подключение") } }
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) { Button { openSheet(.ping) } label: { Image(systemName: "gearshape") }.accessibilityLabel("Настройки пинга") }
+            ToolbarItem(placement: .topBarTrailing) { Button { openSheet(.importer) } label: { Image(systemName: "plus") }.accessibilityLabel("Добавить подключение").accessibilityIdentifier("dashboard.add") }
+        }
+    }
+    private var dashboardList: some View {
+        List {
+            connectionOrb.id("dashboard.top")
+                .listRowSeparator(.hidden).listRowBackground(Color.clear)
+            HStack {
+                Button("Проверить соединение") {
+                    guard let profile = store.selected else { openSheet(.importer); return }
+                    Task { await store.measure(profile) }
+                }.disabled(store.selected.map { store.probing.contains($0.id) } ?? false)
+                Spacer()
+                Button(collapsedGroups.isEmpty ? "Скрыть все" : "Показать все") {
+                    if !collapsedGroups.isEmpty { collapsedGroups.removeAll() }
+                    else { collapsedGroups = Set(store.snapshot.subscriptions.map { $0.id.uuidString } + (store.snapshot.profiles.contains { $0.subscriptionID == nil } ? ["local"] : [])) }
+                }
+            }.buttonStyle(.plain).font(.caption.weight(.medium))
+                .listRowSeparator(.hidden).listRowBackground(Color.clear)
+            HStack {
+                Button { openSheet(.ping) } label: { Label("Пинг: \((store.snapshot.ping ?? PingSettings()).method.title)", systemImage: "speedometer") }
+                Spacer()
+                if store.batchProbing { ProgressView(); Button(store.cancelBatch ? "Останавливаем…" : "Стоп") { store.cancelBatch = true }.disabled(store.cancelBatch) }
+            }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
+                .listRowSeparator(.hidden).listRowBackground(Color.clear)
+            ForEach(store.snapshot.appearance.widgets.filter { !store.snapshot.appearance.hiddenWidgets.contains($0) }) { widget in
+                switch widget {
+                case .server: ServerGroupsView(collapsedGroups: $collapsedGroups)
+                case .routing: routingCard.listRowSeparator(.hidden).listRowBackground(Color.clear)
+                case .favorites: favoritesCard.listRowSeparator(.hidden).listRowBackground(Color.clear)
+                }
+            }
+            Text("PRIVATE BY DESIGN · MADE FOR YOU").font(.system(size: 9, design: .monospaced)).tracking(2).foregroundStyle(.tertiary)
+                .padding(.vertical, 18).listRowSeparator(.hidden).listRowBackground(Color.clear)
+        }
+        .listStyle(.plain)
+        .scrollIndicators(.visible)
+        .scrollContentBackground(.hidden)
+        .accessibilityIdentifier("dashboard.serverList")
+    }
+    private func connectionDock(scrollToTop: @escaping () -> Void) -> some View {
+        HStack(spacing: 10) {
+            Button(action: scrollToTop) { Image(systemName: "arrow.up.to.line").frame(width: 44, height: 48) }
+                .accessibilityLabel("Наверх").accessibilityIdentifier("dashboard.scrollToTop")
+            VStack(alignment: .leading, spacing: 3) {
+                Text(store.selected?.name ?? "Выберите сервер").font(.caption.weight(.semibold)).lineLimit(1)
+                Text(store.tunnel.title).font(.caption2).foregroundStyle(.secondary)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            Button { Task { await store.toggleConnection() } } label: {
+                Label(store.tunnel.active ? "Отключить" : "Подключить", systemImage: "power")
+                    .font(.caption.weight(.semibold)).padding(.horizontal, 14).frame(height: 48)
+                    .auraGlass(tint: store.accent.opacity(0.12), interactive: true, radius: 18)
+            }.buttonStyle(.plain)
+                .disabled(store.busy || store.tunnel.status == .disconnecting || (store.selected == nil && !store.tunnel.active))
+                .accessibilityIdentifier("dashboard.connection.toggle")
+        }.padding(.horizontal, 12).padding(.vertical, 8).background(.regularMaterial)
     }
     private var connectionOrb: some View {
         VStack(spacing: 16) {

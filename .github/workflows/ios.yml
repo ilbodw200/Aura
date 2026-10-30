@@ -2,9 +2,9 @@ name: iOS build, core tests and launch
 on:
   push:
     branches: [main]
-    paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
+    paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'UITests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
   pull_request:
-    paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
+    paths: ['Aura/**', 'Shared/**', 'Tunnel/**', 'Tests/**', 'UITests/**', 'Config/**', 'project*.yml', 'Package.swift', '.github/workflows/ios.yml']
   workflow_dispatch:
     inputs:
       runner:
@@ -15,6 +15,7 @@ on:
 jobs:
   test:
     runs-on: ${{ inputs.runner || 'macos-26' }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode 26 on fallback runner
@@ -28,10 +29,14 @@ jobs:
         run: swift test
       - name: Build for iPhone simulator
         run: |
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; d=json.load(sys.stdin); print(next(x["udid"] for a in d["devices"].values() for x in a if x["name"].startswith("iPhone")))')
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; d=json.load(sys.stdin); a=[x for k,v in d["devices"].items() for x in v if "iOS-26" in k and x["name"].startswith("iPhone")]; print(next(iter(a))["udid"])')
           echo "AURA_SIMULATOR_ID=$DEVICE" >> "$GITHUB_ENV"
           xcrun simctl boot "$DEVICE"
           xcodebuild build -project Aura.xcodeproj -scheme Aura -destination "platform=iOS Simulator,id=$DEVICE" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO
+      - name: Verify scrolling through 57 servers and selecting the last one
+        run: |
+          xcrun simctl bootstatus "$AURA_SIMULATOR_ID" -b
+          xcodebuild test -project Aura.xcodeproj -scheme AuraScrolling -destination "platform=iOS Simulator,id=$AURA_SIMULATOR_ID" -derivedDataPath DerivedData -resultBundlePath ScrollTestResults.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
       - name: Launch app and capture actual simulator screen
         run: |
           xcrun simctl bootstatus "$AURA_SIMULATOR_ID" -b
@@ -41,7 +46,10 @@ jobs:
           sleep 4
           xcrun simctl io "$AURA_SIMULATOR_ID" screenshot Aura-iPhone.png
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: Aura-iPhone-screen
-          path: Aura-iPhone.png
-          if-no-files-found: error
+          path: |
+            Aura-iPhone.png
+            ScrollTestResults.xcresult
+          if-no-files-found: warn

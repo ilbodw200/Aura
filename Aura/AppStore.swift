@@ -25,6 +25,21 @@ final class AppStore {
         }
     }
     func load() async {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ui-scroll-fixture") {
+            snapshot = AppSnapshot()
+            let subscription = Subscription(id: UUID(uuidString: "10000000-0000-4000-8000-000000000001")!, name: "Тест прокрутки · 57 серверов", url: URL(string: "https://example.invalid/subscription")!)
+            snapshot.subscriptions = [subscription]
+            snapshot.profiles = (1...57).map { index in
+                ProxyProfile(id: UUID(uuidString: String(format: "00000000-0000-4000-8000-%012d", index))!, name: String(format: "Сервер %02d", index), kind: .vless, host: "server\(index).example.invalid", port: 443, credential: "11111111-2222-4333-8444-555555555555", subscriptionID: subscription.id, isExample: true)
+            }
+            snapshot.selectedID = snapshot.profiles.first?.id
+            snapshot.appearance.reduceMotion = true
+            snapshot.hideInSwitcher = false
+            // No vault access or persistence, and no real VPN endpoints in UI tests.
+            return
+        }
+        #endif
         do { snapshot = try SecureStore.load(); storageReady = true }
         catch { message = "Хранилище не открыто. Данные сохранены без изменений. \(error.localizedDescription)" }
         do { try await tunnel.load() } catch { log("Системный VPN-профиль пока недоступен.") }

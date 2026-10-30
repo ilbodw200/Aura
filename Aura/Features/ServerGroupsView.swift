@@ -2,69 +2,73 @@ import SwiftUI
 
 struct ServerGroupsView: View {
     @Environment(AppStore.self) private var store
-    let collapsed: Bool
+    @Binding var collapsedGroups: Set<String>
     var body: some View {
-        LazyVStack(spacing: 16) {
-            let local = store.snapshot.profiles.filter { $0.subscriptionID == nil }
-            if !local.isEmpty { ServerGroupCard(title: "Мои серверы", subscription: nil, profiles: local, collapsed: collapsed) }
-            ForEach(store.snapshot.subscriptions) { subscription in
-                ServerGroupCard(title: subscription.name, subscription: subscription, profiles: store.snapshot.profiles.filter { $0.subscriptionID == subscription.id }, collapsed: collapsed)
+        let local = store.snapshot.profiles.filter { $0.subscriptionID == nil }
+        if !local.isEmpty { group(id: "local", title: "Мои серверы", subscription: nil, profiles: local) }
+        ForEach(store.snapshot.subscriptions) { subscription in
+            group(id: subscription.id.uuidString, title: subscription.name, subscription: subscription, profiles: store.snapshot.profiles.filter { $0.subscriptionID == subscription.id })
+        }
+        if store.snapshot.profiles.isEmpty && store.snapshot.subscriptions.isEmpty {
+            AuraCard {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Добавьте первое подключение").font(.headline)
+                    Text("Нажмите +, чтобы импортировать подписку, ссылку сервера или QR-код.").font(.subheadline).foregroundStyle(.secondary)
+                }
+            }.listRowBackground(Color.clear).listRowSeparator(.hidden)
+        }
+    }
+    private func group(id: String, title: String, subscription: Subscription?, profiles: [ProxyProfile]) -> some View {
+        Section {
+            if !collapsedGroups.contains(id) {
+                if let subscription {
+                    ServerSubscriptionInfo(subscription: subscription)
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                }
+                ForEach(profiles) { profile in ServerProfileRow(profile: profile) }
+                if profiles.isEmpty { Text("Список пуст. Обновите подписку.").font(.caption).foregroundStyle(.secondary).listRowBackground(Color.clear) }
             }
-            if store.snapshot.profiles.isEmpty && store.snapshot.subscriptions.isEmpty {
-                AuraCard { VStack(alignment: .leading, spacing: 8) { Text("Добавьте первое подключение").font(.headline); Text("Нажмите +, чтобы импортировать подписку, ссылку сервера или QR-код.").font(.subheadline).foregroundStyle(.secondary) }.frame(maxWidth: .infinity, alignment: .leading) }
+        } header: {
+            HStack(spacing: 12) {
+                Button {
+                    if collapsedGroups.contains(id) { collapsedGroups.remove(id) }
+                    else { collapsedGroups.insert(id) }
+                } label: {
+                    HStack {
+                        Image(systemName: collapsedGroups.contains(id) ? "chevron.right" : "chevron.down")
+                        VStack(alignment: .leading, spacing: 4) { Text(title).font(.headline); Text("\(profiles.count) серверов").font(.caption).foregroundStyle(.secondary) }
+                        Spacer(minLength: 0)
+                    }.foregroundStyle(.primary)
+                }.accessibilityLabel("\(collapsedGroups.contains(id) ? "Раскрыть" : "Свернуть") \(title)")
+                if let subscription {
+                    Button { Task { await store.refreshSubscription(subscription.id) } } label: { Image(systemName: "arrow.clockwise").frame(width: 36, height: 44) }
+                        .disabled(store.busy || store.tunnel.active).accessibilityLabel("Обновить подписку")
+                }
+                Button { Task { await store.measureGroup(profiles) } } label: { Image(systemName: "speedometer").frame(width: 36, height: 44) }
+                    .disabled(store.batchProbing || profiles.isEmpty).accessibilityLabel("Проверить все серверы группы")
+            }.buttonStyle(.plain).textCase(nil).padding(12).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        }.id(id)
+    }
+}
+
+private struct ServerSubscriptionInfo: View {
+    let subscription: Subscription
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let usage = subscription.usage {
+                if let summary = usage.summary { Label(summary, systemImage: "chart.bar.fill").font(.caption) }
+                if let date = usage.expire { Text("Истекает: \(date.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(date < .now ? .orange : .secondary) }
             }
+            HStack {
+                Label(subscription.url.scheme == "https" ? "HTTPS" : "HTTP", systemImage: subscription.url.scheme == "https" ? "lock.fill" : "lock.open")
+                Spacer()
+                if let date = subscription.updatedAt { Text(date.formatted(date: .abbreviated, time: .shortened)) }
+            }.font(.caption2).foregroundStyle(.secondary)
+            if let error = subscription.lastError { Text(error).font(.caption).foregroundStyle(.orange) }
+            if let warning = subscription.lastWarning { Text(warning).font(.caption).foregroundStyle(.orange) }
         }
     }
 }
-
-private struct ServerGroupCard: View {
-    @Environment(AppStore.self) private var store
-    let title: String
-    let subscription: Subscription?
-    let profiles: [ProxyProfile]
-    let collapsed: Bool
-    @State private var expanded = true
-    var body: some View {
-        VStack(spacing: 0) {
-            header
-            if expanded {
-                subscriptionInfo
-                ForEach(profiles) { profile in
-                    Divider().opacity(0.35)
-                    ServerProfileRow(profile: profile)
-                }
-                if profiles.isEmpty { Text("Список пуст. Обновите подписку.").font(.caption).foregroundStyle(.secondary).padding(18) }
-            }
-        }.auraGlass(radius: store.snapshot.appearance.cornerRadius)
-            .onChange(of: collapsed) { withAnimation { expanded = !collapsed } }
-    }
-    private var header: some View {
-            HStack(spacing: 12) {
-                Button { withAnimation { expanded.toggle() } } label: {
-                    HStack { Image(systemName: expanded ? "chevron.down" : "chevron.right"); VStack(alignment: .leading, spacing: 4) { Text(title).font(.headline).foregroundStyle(.primary); Text("\(profiles.count) серверов").font(.caption).foregroundStyle(.secondary) }; Spacer(minLength: 0) }
-                }.buttonStyle(.plain).accessibilityLabel("\(expanded ? "Свернуть" : "Раскрыть") \(title)")
-                if let subscription {
-                    Button { Task { await store.refreshSubscription(subscription.id) } } label: { Image(systemName: "arrow.clockwise").frame(width: 36, height: 40) }.disabled(store.busy || store.tunnel.active).accessibilityLabel("Обновить подписку")
-                }
-                Button { Task { await store.measureGroup(profiles) } } label: { Image(systemName: "speedometer").frame(width: 36, height: 40) }.disabled(store.batchProbing || profiles.isEmpty).accessibilityLabel("Проверить все серверы группы")
-            }.padding(16).background(store.accent.opacity(0.12))
-    }
-    @ViewBuilder private var subscriptionInfo: some View {
-                if let subscription {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if let usage = subscription.usage {
-                            if let summary = usage.summary { Label(summary, systemImage: "chart.bar.fill").font(.caption) }
-                            if let date = usage.expire { Text("Истекает: \(date.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(date < .now ? .orange : .secondary) }
-                        }
-                        HStack { Label(subscription.url.scheme == "https" ? "HTTPS" : "HTTP", systemImage: subscription.url.scheme == "https" ? "lock.fill" : "lock.open"); Spacer(); if let date = subscription.updatedAt { Text(date.formatted(date: .abbreviated, time: .shortened)) } }.font(.caption2).foregroundStyle(.secondary)
-                        if let error = subscription.lastError { Text(error).font(.caption).foregroundStyle(.orange) }
-                        if let warning = subscription.lastWarning { Text(warning).font(.caption).foregroundStyle(.orange) }
-                    }.padding(14)
-                }
-    }
-
-}
-
 
 private struct ServerProfileRow: View {
     @Environment(AppStore.self) private var store
@@ -82,6 +86,8 @@ private struct ServerProfileRow: View {
                                 Spacer(minLength: 0)
                             }.contentShape(Rectangle())
                         }.buttonStyle(.plain)
+                            .accessibilityIdentifier("server.select.\(profile.id.uuidString)")
+                            .accessibilityValue(store.snapshot.selectedID == profile.id ? "Выбран" : "Не выбран")
                         Button { Task { await store.measure(profile) } } label: {
                             VStack(alignment: .trailing, spacing: 4) {
                                 if store.probing.contains(profile.id) { ProgressView().tint(store.accent) }
@@ -89,7 +95,10 @@ private struct ServerProfileRow: View {
                                 else if let ms = profile.latencyMS { Text((store.snapshot.ping?.displayStatus == true && (profile.pingStatus ?? 0) > 0) ? "HTTP \(profile.pingStatus!)" : "\(ms) мс"); Text(profile.pingMethod ?? "TCP").foregroundStyle(.secondary) }
                                 else { Image(systemName: "waveform.path") }
                             }.font(.system(.caption, design: .monospaced)).frame(minWidth: 62, minHeight: 44)
-                        }.disabled(store.probing.contains(profile.id)).accessibilityLabel("Проверить \(profile.name)")
-                    }.padding(store.snapshot.appearance.compact ? 12 : 16).background(store.snapshot.selectedID == profile.id ? store.accent.opacity(0.1) : .clear)
+                        }.buttonStyle(.plain).disabled(store.probing.contains(profile.id)).accessibilityLabel("Проверить \(profile.name)")
+                    }.padding(store.snapshot.appearance.compact ? 12 : 16)
+                        .background(store.snapshot.selectedID == profile.id ? store.accent.opacity(0.12) : Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 16))
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowSeparator(.hidden).listRowBackground(Color.clear)
     }
 }

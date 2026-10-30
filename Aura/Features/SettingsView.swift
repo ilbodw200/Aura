@@ -36,7 +36,7 @@ struct SettingsView: View {
                 Button("Зашифрованная резервная копия", systemImage: "externaldrive.badge.shield.half.filled") { openSheet(.backup) }
             }
             Section("О приложении") {
-                LabeledContent("AURA", value: "1.0.1")
+                LabeledContent("AURA", value: "1.0.2")
                 LabeledContent("Интерфейс", value: "SwiftUI · Liquid Glass")
                 Text("VPN-ядро входит в полную сборку. App Group для подключения не требуется, но подпись приложения и расширения должна разрешать Network Extension. Полное соответствие Happ пока не достигнуто.").font(.caption).foregroundStyle(.secondary)
                 Link("Исходный код sing-box и лицензия", destination: URL(string: "https://github.com/SagerNet/sing-box")!)

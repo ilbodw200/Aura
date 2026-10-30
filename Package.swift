@@ -13,7 +13,7 @@ let package = Package(
             "CorePatch", "Aura/Services/ProbeService.swift", "Aura/Services/SubscriptionService.swift",
             "Aura/Services/TunnelController.swift", "Aura.xcodeproj", "Build IPA.command",
             "Aura/Services/DeviceIdentity.swift", "Android",
-            "Config", "Docs", "Scripts", "Tests", "Tunnel", "LICENSE", "README.md",
+            "Config", "Docs", "Scripts", "Tests", "UITests", "Tunnel", "LICENSE", "README.md",
             "THIRD_PARTY_NOTICES.md", "project.yml", "project-core.yml"
         ], sources: ["Shared", "Aura/Services/SecureStore.swift"]),
         .testTarget(name: "AuraTests", dependencies: ["Aura"], path: "Tests")
