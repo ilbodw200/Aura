@@ -73,6 +73,27 @@ jobs:
       - name: Verify APK signature
         if: ${{ !inputs.core_only }}
         run: "$ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose --print-certs Android/app/build/outputs/apk/release/app-release.apk"
+      - name: Enable KVM for emulator
+        if: ${{ !inputs.core_only }}
+        run: sudo chmod 666 /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        if: ${{ !inputs.core_only }}
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            gradle -p Android --no-daemon connectedDebugAndroidTest
+            adb uninstall app.aura.android
+            adb install Android/app/build/outputs/apk/release/app-release.apk
+            adb shell am start -W -n app.aura.android/.MainActivity
+            sleep 4
+            adb shell screencap -p /sdcard/Aura-Android.png
+            adb pull /sdcard/Aura-Android.png Aura-Android.png
+            adb logcat -d -s AndroidRuntime > Android-launch.log
+            if grep -q 'FATAL EXCEPTION' Android-launch.log; then cat Android-launch.log; exit 1; fi
       - uses: actions/upload-artifact@v4
         if: ${{ !inputs.core_only }}
         with:
@@ -83,4 +104,7 @@ jobs:
         if: always() && !inputs.core_only
         with:
           name: Android-test-results
-          path: Android/app/build/reports/tests/
+          path: |
+            Android/app/build/reports/
+            Aura-Android.png
+            Android-launch.log
