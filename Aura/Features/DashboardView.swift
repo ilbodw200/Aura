@@ -27,7 +27,7 @@ struct DashboardView: View {
     }
     private var dashboardList: some View {
         List {
-            connectionOrb.id("dashboard.top")
+            connectionOrb.frame(maxWidth: .infinity).id("dashboard.top")
                 .listRowSeparator(.hidden).listRowBackground(Color.clear)
             HStack {
                 Button("Проверить соединение") {

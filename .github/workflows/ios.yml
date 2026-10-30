@@ -45,6 +45,12 @@ jobs:
           xcrun simctl launch "$AURA_SIMULATOR_ID" app.aura.proxy
           sleep 4
           xcrun simctl io "$AURA_SIMULATOR_ID" screenshot Aura-iPhone.png
+      - name: Export scrolling test screenshots
+        if: always()
+        run: |
+          if [ -d ScrollTestResults.xcresult ]; then
+            xcrun xcresulttool export attachments --path ScrollTestResults.xcresult --output-path ScrollScreens
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -52,4 +58,5 @@ jobs:
           path: |
             Aura-iPhone.png
             ScrollTestResults.xcresult
+            ScrollScreens
           if-no-files-found: warn
