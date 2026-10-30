@@ -11,7 +11,7 @@ final class TunnelController {
     private var tunnelBundleID: String {
         Bundle.main.object(forInfoDictionaryKey: "AuraTunnelBundleIdentifier") as? String ?? "app.aura.proxy.tunnel"
     }
-    private var observer: NSObjectProtocol?
+    @ObservationIgnored private var observation: VPNStatusObservation?
     var active: Bool { status == .connected || status == .connecting || status == .reasserting }
     var title: String {
         switch status {
@@ -23,11 +23,10 @@ final class TunnelController {
         }
     }
     init() {
-        observer = NotificationCenter.default.addObserver(forName: .NEVPNStatusDidChange, object: nil, queue: .main) { [weak self] _ in
+        observation = VPNStatusObservation { [weak self] in
             Task { @MainActor [weak self] in self?.refreshStatus() }
         }
     }
-    deinit { if let observer { NotificationCenter.default.removeObserver(observer) } }
     func load() async throws {
         let managers = try await NETunnelProviderManager.loadAllFromPreferences()
         manager = managers.first { ($0.protocolConfiguration as? NETunnelProviderProtocol)?.providerBundleIdentifier == tunnelBundleID }
@@ -76,4 +75,14 @@ final class TunnelController {
         manager?.connection.stopVPNTunnel()
         refreshStatus()
     }
+}
+
+/// Owns the NotificationCenter token outside actor isolation, so teardown can
+/// safely remove it even when Swift releases the controller off the main actor.
+private final class VPNStatusObservation {
+    private let token: NSObjectProtocol
+    init(onChange: @escaping () -> Void) {
+        token = NotificationCenter.default.addObserver(forName: .NEVPNStatusDidChange, object: nil, queue: .main) { _ in onChange() }
+    }
+    deinit { NotificationCenter.default.removeObserver(token) }
 }
