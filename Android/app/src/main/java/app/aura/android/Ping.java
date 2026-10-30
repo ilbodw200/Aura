@@ -15,8 +15,10 @@ final class Ping {
         String method=settings.getString("method"),mode=settings.getString("mode");
         if(!java.util.Arrays.asList(METHODS).contains(method)||!java.util.Arrays.asList(MODES).contains(mode))throw new Exception("Неизвестный метод пинга.");
         int timeout=settings.getInt("timeout");if(timeout<5||timeout>15)throw new Exception("Таймаут: от 5 до 15 секунд.");
-        URI uri=new URI(settings.getString("url"));
-        if(!java.util.Arrays.asList("https","http").contains(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null)throw new Exception("Укажите HTTP/HTTPS URL без логина и пароля.");
+        if(method.equals("GET")||method.equals("HEAD")){
+            URI uri=new URI(settings.getString("url"));
+            if(!java.util.Arrays.asList("https","http").contains(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null)throw new Exception("Укажите HTTP/HTTPS URL без логина и пароля.");
+        }
     }
     static JSONObject measure(JSONObject state,JSONObject profile,JSONObject settings)throws Exception {
         validate(settings);

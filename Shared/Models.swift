@@ -113,7 +113,7 @@ enum RoutingMode: String, Codable, CaseIterable, Identifiable {
 enum HomeWidget: String, Codable, CaseIterable, Identifiable {
     case server, routing, favorites
     var id: String { rawValue }
-    var title: String { switch self { case .server: "Активный сервер"; case .routing: "Маршрутизация"; case .favorites: "Избранное" } }
+    var title: String { switch self { case .server: "Группы серверов"; case .routing: "Маршрутизация"; case .favorites: "Избранное" } }
 }
 
 struct Appearance: Codable, Equatable {

@@ -26,6 +26,19 @@ private struct ServerGroupCard: View {
     @State private var expanded = true
     var body: some View {
         VStack(spacing: 0) {
+            header
+            if expanded {
+                subscriptionInfo
+                ForEach(profiles) { profile in
+                    Divider().opacity(0.35)
+                    ServerProfileRow(profile: profile)
+                }
+                if profiles.isEmpty { Text("Список пуст. Обновите подписку.").font(.caption).foregroundStyle(.secondary).padding(18) }
+            }
+        }.auraGlass(radius: store.snapshot.appearance.cornerRadius)
+            .onChange(of: collapsed) { withAnimation { expanded = !collapsed } }
+    }
+    private var header: some View {
             HStack(spacing: 12) {
                 Button { withAnimation { expanded.toggle() } } label: {
                     HStack { Image(systemName: expanded ? "chevron.down" : "chevron.right"); VStack(alignment: .leading, spacing: 4) { Text(title).font(.headline).foregroundStyle(.primary); Text("\(profiles.count) серверов").font(.caption).foregroundStyle(.secondary) }; Spacer(minLength: 0) }
@@ -35,7 +48,8 @@ private struct ServerGroupCard: View {
                 }
                 Button { Task { await store.measureGroup(profiles) } } label: { Image(systemName: "speedometer").frame(width: 36, height: 40) }.disabled(store.batchProbing || profiles.isEmpty).accessibilityLabel("Проверить все серверы группы")
             }.padding(16).background(store.accent.opacity(0.12))
-            if expanded {
+    }
+    @ViewBuilder private var subscriptionInfo: some View {
                 if let subscription {
                     VStack(alignment: .leading, spacing: 6) {
                         if let usage = subscription.usage {
@@ -47,8 +61,15 @@ private struct ServerGroupCard: View {
                         if let warning = subscription.lastWarning { Text(warning).font(.caption).foregroundStyle(.orange) }
                     }.padding(14)
                 }
-                ForEach(profiles) { profile in
-                    Divider().opacity(0.35)
+    }
+
+}
+
+
+private struct ServerProfileRow: View {
+    @Environment(AppStore.self) private var store
+    let profile: ProxyProfile
+    var body: some View {
                     HStack(spacing: 12) {
                         Button { store.select(profile.id) } label: {
                             HStack(spacing: 12) {
@@ -70,10 +91,5 @@ private struct ServerGroupCard: View {
                             }.font(.system(.caption, design: .monospaced)).frame(minWidth: 62, minHeight: 44)
                         }.disabled(store.probing.contains(profile.id)).accessibilityLabel("Проверить \(profile.name)")
                     }.padding(store.snapshot.appearance.compact ? 12 : 16).background(store.snapshot.selectedID == profile.id ? store.accent.opacity(0.1) : .clear)
-                }
-                if profiles.isEmpty { Text("Список пуст. Обновите подписку.").font(.caption).foregroundStyle(.secondary).padding(18) }
-            }
-        }.auraGlass(radius: store.snapshot.appearance.cornerRadius)
-            .onChange(of: collapsed) { withAnimation { expanded = !collapsed } }
     }
 }

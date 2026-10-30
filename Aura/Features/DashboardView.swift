@@ -19,11 +19,10 @@ struct DashboardView: View {
                     Spacer()
                     Button(collapsed ? "Показать все" : "Скрыть все") { collapsed.toggle() }
                 }.font(.caption.weight(.medium))
-                HStack { Button { openSheet(.ping) } label: { Label("Пинг: \((store.snapshot.ping ?? PingSettings()).method.title)", systemImage: "speedometer") }; Spacer(); if store.batchProbing { ProgressView() } }.font(.caption).foregroundStyle(.secondary)
-                ServerGroupsView(collapsed: collapsed)
+                HStack { Button { openSheet(.ping) } label: { Label("Пинг: \((store.snapshot.ping ?? PingSettings()).method.title)", systemImage: "speedometer") }; Spacer(); if store.batchProbing { ProgressView(); Button(store.cancelBatch ? "Останавливаем…" : "Стоп") { store.cancelBatch = true }.disabled(store.cancelBatch) } }.font(.caption).foregroundStyle(.secondary)
                 ForEach(store.snapshot.appearance.widgets.filter { !store.snapshot.appearance.hiddenWidgets.contains($0) }) { widget in
                     switch widget {
-                    case .server: EmptyView()
+                    case .server: ServerGroupsView(collapsed: collapsed)
                     case .routing: routingCard
                     case .favorites: favoritesCard
                     }

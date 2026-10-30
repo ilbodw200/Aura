@@ -18,7 +18,9 @@ struct PingSettings: Codable, Equatable {
     var displayStatus = false
     func validate() throws {
         guard (5...15).contains(timeout), timeout.isFinite else { throw AuraError.message("Таймаут должен быть от 5 до 15 секунд.") }
-        guard let value = URLComponents(string: url), ["https", "http"].contains(value.scheme?.lowercased() ?? ""), value.host?.isEmpty == false, value.user == nil, value.password == nil else { throw AuraError.message("Введите HTTP/HTTPS URL теста без логина и пароля.") }
+        if method.viaProxy {
+            guard let value = URLComponents(string: url), ["https", "http"].contains(value.scheme?.lowercased() ?? ""), value.host?.isEmpty == false, value.user == nil, value.password == nil else { throw AuraError.message("Введите HTTP/HTTPS URL теста без логина и пароля.") }
+        }
     }
 }
 struct PingResult: Codable {

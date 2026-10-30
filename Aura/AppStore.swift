@@ -11,6 +11,7 @@ final class AppStore {
     var probing: Set<UUID> = []
     var pingErrors: [UUID: String] = [:]
     var batchProbing = false
+    var cancelBatch = false
     private var storageReady = false
     var selected: ProxyProfile? { snapshot.profiles.first { $0.id == snapshot.selectedID } }
     var favorites: [ProxyProfile] { snapshot.profiles.filter(\.favorite) }
@@ -148,10 +149,11 @@ final class AppStore {
         }
     }
     func measureGroup(_ profiles: [ProxyProfile]) async {
-        guard !batchProbing else { return }; batchProbing = true
+        guard !batchProbing else { return }; batchProbing = true; cancelBatch = false
         defer { batchProbing = false }
         // Bound traffic and core memory: two isolated probes at a time.
         for offset in stride(from: 0, to: profiles.count, by: 2) {
+            if cancelBatch || Task.isCancelled { return }
             await withTaskGroup(of: Void.self) { group in
                 for profile in profiles[offset..<min(offset + 2, profiles.count)] { group.addTask { await self.measure(profile, reportError: false) } }
             }
