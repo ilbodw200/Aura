@@ -70,7 +70,8 @@ enum ProfileParser {
         guard let colon = auth.firstIndex(of: ":"), let endpoint = URLComponents(string: "ss://" + String(raw[raw.index(after: at)...])),
               let host = endpoint.host, let port = endpoint.port, (1...65535).contains(port) else { throw AuraError.message("Неверные параметры Shadowsocks.") }
         guard !(endpoint.queryItems ?? []).contains(where: { $0.name == "plugin" }) else { throw AuraError.message("Shadowsocks plugins пока не поддерживаются.") }
-        let profile = ProxyProfile(name: fragment ?? host, kind: .shadowsocks, host: host, port: port, credential: String(auth[auth.index(after: colon)...]).removingPercentEncoding ?? "", method: String(auth[..<colon]))
+        let name = fragment.flatMap { $0.isEmpty ? nil : $0 } ?? host
+        let profile = ProxyProfile(name: name, kind: .shadowsocks, host: host, port: port, credential: String(auth[auth.index(after: colon)...]).removingPercentEncoding ?? "", method: String(auth[..<colon]))
         try ConfigBuilder.validate(profile)
         return profile
     }

@@ -33,6 +33,7 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(sip.credential, "secret:with:colons")
         let legacy = Data("aes-128-gcm:secret@example.com:8388".utf8).base64EncodedString()
         XCTAssertEqual(try ProfileParser.parseLink("ss://\(legacy)").port, 8388)
+        XCTAssertEqual(try ProfileParser.parseLink("ss://\(legacy)").name, "example.com")
         XCTAssertThrowsError(try ProfileParser.parseLink("ss://\(auth)@example.com:8388?plugin=v2ray-plugin"))
     }
 
