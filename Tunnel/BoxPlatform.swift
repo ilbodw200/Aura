@@ -43,8 +43,8 @@ final class BoxPlatform: NSObject, LibboxPlatformInterfaceProtocol {
         ret0_.pointee = descriptor
     }
 
-    func usePlatformAutoDetectInterfaceControl() -> Bool { false }
-    func autoDetectInterfaceControl(_ fd: Int32) throws {}
+    func usePlatformAutoDetectControl() -> Bool { false }
+    func autoDetectControl(_ fd: Int32) throws {}
     func useProcFS() -> Bool { false }
     func underNetworkExtension() -> Bool { true }
     func includeAllNetworks() -> Bool { false }
