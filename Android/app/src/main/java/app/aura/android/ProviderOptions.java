@@ -10,12 +10,12 @@ final class ProviderOptions {
         String raw=q.optString("fm");if(raw.isEmpty())return null;if(raw.length()>8192)throw new Exception("fm слишком большой.");
         JSONObject mask;try{mask=new JSONObject(raw);}catch(JSONException error){throw new Exception("fm должен содержать JSON FinalMask.");}
         if(mask.length()==0)return null;
-        if(type.equals("hysteria2")){
+        if(type.equals("hysteria2")&&mask.has("quicParams")){
             JSONObject quic=mask.optJSONObject("quicParams");if(mask.length()!=1||quic==null||!only(quic,"congestion","debug")||!quic.optString("congestion").equals("bbr")||(quic.has("debug")&&!Boolean.FALSE.equals(quic.get("debug"))))throw new Exception("Для Hysteria2 поддерживается fm.quicParams с BBR и выключенной отладкой.");
             return null;
         }
         JSONArray tcp=mask.optJSONArray("tcp");JSONObject entry=tcp!=null&&tcp.length()==1?tcp.optJSONObject(0):null;JSONObject settings=entry==null?null:entry.optJSONObject("settings");
-        if(mask.length()!=1||entry==null||entry.length()!=2||!entry.optString("type").equals("fragment")||settings==null||!only(settings,"packets","length","delay")||!settings.optString("packets").equals("tlshello")||!Arrays.asList("tls","reality").contains(q.optString("security",type.equals("trojan")?"tls":"none")))throw new Exception("Этот fm пока не поддерживается. Доступна TCP-фрагментация tlshello с length/delay; маска не была удалена.");
+        if(mask.length()!=1||entry==null||entry.length()!=2||!entry.optString("type").equals("fragment")||settings==null||!only(settings,"packets","length","delay")||!settings.optString("packets").equals("tlshello")||!Arrays.asList("tls","reality").contains(q.optString("security",type.equals("trojan")||type.equals("hysteria2")?"tls":"none")))throw new Exception("Этот fm пока не поддерживается. Доступна TCP-фрагментация tlshello с length/delay; маска не была удалена.");
         int[] length=range(settings.opt("length"),1,16384),delay=range(settings.opt("delay"),0,100);
         return Core.obj("length_min",length[0],"length_max",length[1],"delay_min",delay[0],"delay_max",delay[1]);
     }
