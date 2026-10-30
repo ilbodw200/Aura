@@ -17,6 +17,7 @@ import (
 )
 
 type auraCaptureConn struct { net.Conn; bytes.Buffer }
+func (c *auraCaptureConn) Read(p []byte)(int,error){return 0,io.EOF}
 func (c *auraCaptureConn) Write(p []byte)(int,error){return c.Buffer.Write(p)}
 
 func TestAuraFragmentPreservesHandshakeAndTrailingRecords(t *testing.T){
