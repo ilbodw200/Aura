@@ -5,6 +5,12 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 command -v xcodebuild >/dev/null || { echo 'Xcode is required.' >&2; exit 1; }
 command -v go >/dev/null || { echo 'Go is required: brew install go' >&2; exit 1; }
 command -v xcodegen >/dev/null || { echo 'XcodeGen is required: brew install xcodegen' >&2; exit 1; }
+if [ "${AURA_USE_CACHED_LIBBOX:-0}" = 1 ] && [ -f "$ROOT/Vendor/Libbox.xcframework/Info.plist" ]; then
+  cd "$ROOT"
+  xcodegen generate --spec project-core.yml
+  echo 'Using Libbox restored by the versioned GitHub Actions cache.'
+  exit 0
+fi
 mkdir -p "$ROOT/Vendor"
 CORE="$ROOT/Vendor/sing-box"
 if [ ! -d "$CORE/.git" ]; then

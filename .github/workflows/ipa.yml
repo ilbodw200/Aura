@@ -22,9 +22,16 @@ jobs:
         with:
           go-version: '1.24.2'
           cache: false
+      - uses: actions/cache/restore@v4
+        if: inputs.variant == 'full'
+        id: libbox-cache
+        with:
+          path: Vendor/Libbox.xcframework
+          key: libbox-v1.11.15-gomobile0.1.4-go1.24.2-macos26-${{ runner.arch }}-v1
       - name: Compile iPhone app and package unsigned IPA
         env:
           AURA_VARIANT: ${{ inputs.variant }}
+          AURA_USE_CACHED_LIBBOX: ${{ steps.libbox-cache.outputs.cache-hit == 'true' && '1' || '0' }}
         run: bash Scripts/build-ipa.sh unsigned "$AURA_VARIANT"
       - name: Upload compiled unsigned IPA
         uses: actions/upload-artifact@v4
@@ -33,3 +40,8 @@ jobs:
           path: build-ipa.*/export/*.ipa
           if-no-files-found: error
           retention-days: 7
+      - uses: actions/cache/save@v4
+        if: always() && inputs.variant == 'full' && steps.libbox-cache.outputs.cache-hit != 'true' && hashFiles('Vendor/Libbox.xcframework/Info.plist') != ''
+        with:
+          path: Vendor/Libbox.xcframework
+          key: libbox-v1.11.15-gomobile0.1.4-go1.24.2-macos26-${{ runner.arch }}-v1
