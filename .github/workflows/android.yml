@@ -86,7 +86,7 @@ jobs:
           disable-animations: true
           script: |
             gradle -p Android --no-daemon connectedDebugAndroidTest
-            adb uninstall app.aura.android
+            if adb shell pm list packages | grep -qx 'package:app.aura.android'; then adb uninstall app.aura.android; fi
             adb install Android/app/build/outputs/apk/release/app-release.apk
             adb shell am start -W -n app.aura.android/.MainActivity
             sleep 4
@@ -106,5 +106,6 @@ jobs:
           name: Android-test-results
           path: |
             Android/app/build/reports/
+            Android/app/build/outputs/androidTest-results/
             Aura-Android.png
             Android-launch.log
