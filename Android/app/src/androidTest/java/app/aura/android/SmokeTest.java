@@ -11,6 +11,12 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class) public class SmokeTest {
+    @Test public void nativeCoreAcceptsProviderMasksAndGrpcAuthority()throws Exception{
+        android.content.Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();SetupOptions options=new SetupOptions();options.setBasePath(context.getFilesDir().getAbsolutePath());options.setWorkingPath(context.getFilesDir().getAbsolutePath());options.setTempPath(context.getCacheDir().getAbsolutePath());Libbox.setup(options);
+        for(String link:ProviderFixtures.links()){
+            JSONObject profile=Core.link(link),state=Core.defaults();state.getJSONArray("profiles").put(profile);state.put("selected",profile.getString("id"));Libbox.checkConfig(Core.config(state));
+        }
+    }
     @Test public void nativeCoreAcceptsAllSixProtocolConfigurations()throws Exception{
         android.content.Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();SetupOptions options=new SetupOptions();options.setBasePath(context.getFilesDir().getAbsolutePath());options.setWorkingPath(context.getFilesDir().getAbsolutePath());options.setTempPath(context.getCacheDir().getAbsolutePath());Libbox.setup(options);
         String uuid="11111111-2222-4333-8444-555555555555";String vmess=Base64.getEncoder().encodeToString(Core.obj("add","example.com","port",443,"id",uuid,"net","tcp","tls","tls").toString().getBytes(StandardCharsets.UTF_8));

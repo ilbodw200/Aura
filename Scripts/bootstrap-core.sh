@@ -18,7 +18,8 @@ if [ ! -d "$CORE/.git" ]; then
 fi
 cd "$CORE"
 test "$(git describe --tags --exact-match)" = v1.11.15 || { echo 'Unexpected core checkout.' >&2; exit 1; }
-cp "$ROOT/CorePatch/aura_probe.go" "$CORE/experimental/libbox/aura_probe.go"
+python3 "$ROOT/CorePatch/apply.py" "$CORE"
+go test ./common/dialer -run TestAura -count=1
 go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.4
 go install github.com/sagernet/gomobile/cmd/gobind@v0.1.4
 go run ./cmd/internal/build_libbox -target apple -platform ios,iossimulator

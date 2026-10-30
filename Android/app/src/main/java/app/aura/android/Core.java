@@ -75,7 +75,8 @@ public final class Core {
         if(!type.equals("socks")&&p.optString("credential").isEmpty())throw new Exception("Нет ключа или пароля.");
         if(type.equals("vless")||type.equals("vmess")){try{String id=p.getString("credential");if(!UUID.fromString(id).toString().equalsIgnoreCase(id))throw new Exception();}catch(Exception e){throw new Exception("Нужен корректный UUID.");}}
         JSONObject q=p.getJSONObject("query");
-        Set<String> allowed=new HashSet<>(Arrays.asList("type","security","sni","peer","fp","pbk","sid","flow","path","host","serviceName","alpn","encryption","scy","aid","allowInsecure","insecure","obfs","obfs-password","spx","headerType","packetEncoding"));
+        Set<String> allowed=new HashSet<>(Arrays.asList("type","security","sni","peer","fp","pbk","sid","flow","path","host","serviceName","alpn","encryption","scy","aid","allowInsecure","insecure","obfs","obfs-password","spx","headerType","packetEncoding","fm","mode","authority"));
+        ProviderOptions.fragment(p);
         Iterator<String> keys=q.keys();while(keys.hasNext()){String key=keys.next();if(!allowed.contains(key))throw new Exception("Параметр "+key+" пока не поддерживается.");}
         if(!Arrays.asList("tcp","ws","grpc","http").contains(q.optString("type","tcp")))throw new Exception("Этот транспорт пока не поддерживается.");
         if(!Arrays.asList("none","tls","reality","").contains(q.optString("security","none")))throw new Exception("Неизвестный режим TLS.");
@@ -94,6 +95,7 @@ public final class Core {
         if(p.getString("host").equals("0.0.0.0")||p.getString("host").equals("::"))throw new Exception("Провайдер вернул служебный профиль. Включите отправку HWID и обновите подписку.");
         JSONObject q=p.getJSONObject("query");String type=p.getString("type");
         JSONObject out=obj("tag","proxy","type",type,"server",p.getString("host"),"server_port",p.getInt("port"));
+        JSONObject fragment=ProviderOptions.fragment(p);if(fragment!=null)out.put("aura_tls_fragment",fragment);
         switch(type){
             case "vless":out.put("uuid",p.getString("credential")).put("flow",q.optString("flow"));break;
             case "vmess":out.put("uuid",p.getString("credential")).put("security",q.optString("scy","auto")).put("alter_id",Integer.parseInt(q.optString("aid","0")));break;
@@ -113,7 +115,7 @@ public final class Core {
         String transport=q.optString("type","tcp");
         if(!transport.equals("tcp")){
             JSONObject t=obj("type",transport);
-            if(transport.equals("grpc"))t.put("service_name",q.optString("serviceName"));
+            if(transport.equals("grpc")){t.put("service_name",q.optString("serviceName"));if(!q.optString("authority").isEmpty())t.put("authority",q.getString("authority"));}
             else{t.put("path",q.optString("path","/"));if(q.has("host")){if(transport.equals("http"))t.put("host",new JSONArray(Arrays.asList(q.getString("host").split(","))));else t.put("headers",obj("Host",q.getString("host")));}}
             out.put("transport",t);
         }

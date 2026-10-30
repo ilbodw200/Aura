@@ -27,7 +27,7 @@ enum SubscriptionRequest {
     static func make(url: URL, metadata: DeviceMetadata? = nil, allowHTTP: Bool = false) throws -> URLRequest {
         try validate(url: url, allowHTTP: allowHTTP)
         var request = URLRequest(url: url)
-        request.setValue("Aura/0.1.2", forHTTPHeaderField: "User-Agent")
+        request.setValue("Aura/1.0.1", forHTTPHeaderField: "User-Agent")
         request.setValue("text/plain, application/json;q=0.9, */*;q=0.5", forHTTPHeaderField: "Accept")
         if let metadata, url.scheme?.lowercased() == "https" {
             let values = [metadata.hwid, metadata.os, metadata.osVersion, metadata.model, metadata.deviceInfo]

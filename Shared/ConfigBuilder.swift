@@ -15,8 +15,9 @@ enum ConfigBuilder {
         if let flow = profile.query["flow"], !["", "xtls-rprx-vision"].contains(flow) { throw AuraError.message("Неподдерживаемый flow: \(flow).") }
         if let header = profile.query["headerType"], !["", "none"].contains(header) { throw AuraError.message("TCP headerType=\(header) пока не поддерживается.") }
         if let encoding = profile.query["packetEncoding"], !["xudp", "packetaddr"].contains(encoding) { throw AuraError.message("Неподдерживаемая упаковка UDP: \(encoding).") }
-        let allowed: Set<String> = ["type", "security", "sni", "peer", "fp", "pbk", "sid", "flow", "path", "host", "serviceName", "alpn", "encryption", "net", "tls", "scy", "aid", "allowInsecure", "insecure", "obfs", "obfs-password", "spx", "headerType", "packetEncoding"]
+        let allowed: Set<String> = ["type", "security", "sni", "peer", "fp", "pbk", "sid", "flow", "path", "host", "serviceName", "alpn", "encryption", "net", "tls", "scy", "aid", "allowInsecure", "insecure", "obfs", "obfs-password", "spx", "headerType", "packetEncoding", "fm", "mode", "authority"]
         if let unknown = profile.query.keys.sorted().first(where: { !allowed.contains($0) }) { throw AuraError.message("Параметр \(unknown) пока не поддерживается. Чтобы не испортить конфигурацию, импорт остановлен.") }
+        _ = try ProviderOptions.fragment(profile)
         if let encryption = profile.query["encryption"], encryption != "none" { throw AuraError.message("VLESS encryption \(encryption) пока не поддерживается.") }
         if profile.kind == .shadowsocks && !["aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"].contains(profile.method) { throw AuraError.message("Метод Shadowsocks пока не поддерживается.") }
     }
@@ -28,6 +29,7 @@ enum ConfigBuilder {
             throw AuraError.message("Провайдер вернул служебный профиль вместо сервера. Включите «Отправлять HWID» в настройках подписки и обновите её. Если это не помогает, уточните привязку устройства у провайдера.")
         }
         var outbound: [String: Any] = ["type": profile.kind.rawValue, "tag": "proxy", "server": profile.host, "server_port": profile.port]
+        if let fragment = try ProviderOptions.fragment(profile) { outbound["aura_tls_fragment"] = fragment }
         switch profile.kind {
         case .vless: outbound["uuid"] = profile.credential; outbound["flow"] = profile.query["flow"] ?? ""
         case .vmess: outbound["uuid"] = profile.credential; outbound["security"] = profile.query["scy"] ?? "auto"; outbound["alter_id"] = Int(profile.query["aid"] ?? "0") ?? 0
@@ -48,7 +50,7 @@ enum ConfigBuilder {
         let transport = profile.query["type"] ?? "tcp"
         if transport != "tcp" {
             var options: [String: Any] = ["type": transport]
-            if transport == "grpc" { options["service_name"] = profile.query["serviceName"] ?? "" }
+            if transport == "grpc" { options["service_name"] = profile.query["serviceName"] ?? ""; if let authority = profile.query["authority"], !authority.isEmpty { options["authority"] = authority } }
             else {
                 options["path"] = profile.query["path"] ?? "/"
                 if let host = profile.query["host"] {
