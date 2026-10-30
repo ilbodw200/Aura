@@ -29,6 +29,12 @@ type auraProbeResult struct {
  Reused bool `json:"reused"`
 }
 
+func auraMilliseconds(start time.Time) int64 {
+ elapsed := time.Since(start).Milliseconds()
+ if elapsed < 1 { return 1 }
+ return elapsed
+}
+
 // AuraProbe returns a JSON result. TCP/ICMP test the host; GET/HEAD use proxy.
 func AuraProbe(config, host string, port int32, target, method, mode string, timeoutMS int32) (string, error) {
  if timeoutMS < 1000 || timeoutMS > 15000 { return "", errors.New("invalid timeout") }
@@ -87,7 +93,7 @@ func AuraProbe(config, host string, port int32, target, method, mode string, tim
    request.Header.Set("User-Agent","AURA/1.0")
    begin:=time.Now();response,err:=client.Do(request)
    if err!=nil{lastErr=err;continue}
-   elapsed:=max(int64(1),time.Since(begin).Milliseconds())
+   elapsed:=auraMilliseconds(begin)
    // Drain small responses to enable reuse, cap arbitrary URL downloads.
    _,drainErr:=io.Copy(io.Discard,io.LimitReader(response.Body,64*1024));response.Body.Close()
    if drainErr!=nil{lastErr=drainErr;continue}
@@ -98,6 +104,6 @@ func AuraProbe(config, host string, port int32, target, method, mode string, tim
   data,err:=json.Marshal(result);return string(data),err
  default:return "",errors.New("unknown probe method")
  }
- result.MS=max(int64(1),time.Since(start).Milliseconds())
+ result.MS=auraMilliseconds(start)
  data,err:=json.Marshal(result);return string(data),err
 }
