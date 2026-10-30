@@ -32,6 +32,7 @@ struct RootView: View {
         .onChange(of: store.tunnel.lastError) {
             if let error = store.tunnel.lastError { store.message = error; store.tunnel.lastError = nil }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .auraSubscriptionAdded)) { _ in tab = .profiles }
         .onOpenURL { url in
             guard url.scheme == "aura", url.host == "import", let components = URLComponents(url: url, resolvingAgainstBaseURL: false), let link = components.queryItems?.first(where: { $0.name == "url" })?.value else { store.message = "Неверная ссылка импорта AURA."; return }
             // Never fetch an external subscription without the user's review.
@@ -42,5 +43,8 @@ struct RootView: View {
     }
 }
 
-extension Notification.Name { static let auraImportLink = Notification.Name("auraImportLink") }
+extension Notification.Name {
+    static let auraImportLink = Notification.Name("auraImportLink")
+    static let auraSubscriptionAdded = Notification.Name("auraSubscriptionAdded")
+}
 @MainActor enum PendingImport { static var link: String? }

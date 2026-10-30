@@ -22,7 +22,7 @@ struct SettingsView: View {
                 Label("В приложении нет аналитики и рекламных SDK. Провайдер подписки и сервер DNS получают запросы, необходимые для работы.", systemImage: "eye.slash").font(.caption).foregroundStyle(.secondary)
             }
             Section("Устройство и HWID") {
-                Toggle("Отправлять HWID новым подпискам", isOn: Binding(get: { store.snapshot.sendHWID ?? false }, set: { store.snapshot.sendHWID = $0; store.persist() }))
+                Toggle("Отправлять HWID по умолчанию", isOn: Binding(get: { store.snapshot.sendHWID ?? false }, set: { store.snapshot.sendHWID = $0; store.persist() }))
                 if !hwid.isEmpty {
                     LabeledContent("HWID AURA") { Text(hwid).font(.system(.caption, design: .monospaced)).textSelection(.enabled) }
                     Button("Скопировать HWID", systemImage: "doc.on.doc") { UIPasteboard.general.string = hwid }
@@ -35,7 +35,7 @@ struct SettingsView: View {
                 Button("Зашифрованная резервная копия", systemImage: "externaldrive.badge.shield.half.filled") { openSheet(.backup) }
             }
             Section("О приложении") {
-                LabeledContent("AURA", value: "0.1.1 · Developer Preview")
+                LabeledContent("AURA", value: "0.1.2 · Developer Preview")
                 LabeledContent("Интерфейс", value: "SwiftUI · Liquid Glass")
                 Text("VPN-ядро входит в полную сборку. App Group для подключения не требуется, но подпись приложения и расширения должна разрешать Network Extension. Полное соответствие Happ пока не достигнуто.").font(.caption).foregroundStyle(.secondary)
                 Link("Исходный код sing-box и лицензия", destination: URL(string: "https://github.com/SagerNet/sing-box")!)

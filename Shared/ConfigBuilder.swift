@@ -13,7 +13,9 @@ enum ConfigBuilder {
         guard ["none", "tls", "reality", ""].contains(security) else { throw AuraError.message("Неизвестный режим TLS: \(security).") }
         if security == "reality" && (profile.query["pbk"] ?? "").isEmpty { throw AuraError.message("Для Reality нужен публичный ключ pbk.") }
         if let flow = profile.query["flow"], !["", "xtls-rprx-vision"].contains(flow) { throw AuraError.message("Неподдерживаемый flow: \(flow).") }
-        let allowed: Set<String> = ["type", "security", "sni", "peer", "fp", "pbk", "sid", "flow", "path", "host", "serviceName", "alpn", "encryption", "net", "tls", "scy", "aid", "allowInsecure", "insecure", "obfs", "obfs-password"]
+        if let header = profile.query["headerType"], !["", "none"].contains(header) { throw AuraError.message("TCP headerType=\(header) пока не поддерживается.") }
+        if let encoding = profile.query["packetEncoding"], !["xudp", "packetaddr"].contains(encoding) { throw AuraError.message("Неподдерживаемая упаковка UDP: \(encoding).") }
+        let allowed: Set<String> = ["type", "security", "sni", "peer", "fp", "pbk", "sid", "flow", "path", "host", "serviceName", "alpn", "encryption", "net", "tls", "scy", "aid", "allowInsecure", "insecure", "obfs", "obfs-password", "spx", "headerType", "packetEncoding"]
         if let unknown = profile.query.keys.sorted().first(where: { !allowed.contains($0) }) { throw AuraError.message("Параметр \(unknown) пока не поддерживается. Чтобы не испортить конфигурацию, импорт остановлен.") }
         if let encryption = profile.query["encryption"], encryption != "none" { throw AuraError.message("VLESS encryption \(encryption) пока не поддерживается.") }
         if profile.kind == .shadowsocks && !["aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"].contains(profile.method) { throw AuraError.message("Метод Shadowsocks пока не поддерживается.") }
@@ -33,6 +35,7 @@ enum ConfigBuilder {
         case .shadowsocks: outbound["method"] = profile.method; outbound["password"] = profile.credential
         case .socks: outbound["version"] = "5"; outbound["username"] = profile.username; outbound["password"] = profile.credential
         }
+        if [.vless, .vmess].contains(profile.kind), let encoding = profile.query["packetEncoding"] { outbound["packet_encoding"] = encoding }
         let security = profile.query["security"] ?? (profile.kind == .trojan || profile.kind == .hysteria2 ? "tls" : "none")
         if security == "tls" || security == "reality" {
             var tls: [String: Any] = ["enabled": true, "server_name": profile.query["sni"] ?? profile.query["peer"] ?? profile.host]

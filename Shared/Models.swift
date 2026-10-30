@@ -38,6 +38,8 @@ struct Subscription: Codable, Identifiable {
     var updatedAt: Date?
     var lastError: String?
     var sendHWID: Bool?
+    var allowHTTP: Bool?
+    var lastWarning: String?
 }
 
 enum RouteAction: String, Codable, CaseIterable, Identifiable {

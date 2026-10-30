@@ -10,6 +10,7 @@
 <key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
 <key>UILaunchScreen</key><dict/>
 <key>NSCameraUsageDescription</key><string>Сканирование QR-кода конфигурации прокси.</string>
+<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>
 <key>AuraAppGroup</key><string>$(AURA_APP_GROUP)</string>
 <key>AuraTunnelBundleIdentifier</key><string>$(AURA_TUNNEL_BUNDLE_ID)</string>
 <key>CFBundleURLTypes</key><array><dict><key>CFBundleURLSchemes</key><array><string>aura</string></array></dict></array>

@@ -36,6 +36,7 @@ enum ProfileParser {
               let port = components.port, (1...65535).contains(port) else { throw AuraError.message("Проверьте адрес сервера и порт 1–65535.") }
         var query: [String: String] = [:]
         for item in components.queryItems ?? [] { query[item.name] = item.value ?? "" }
+        if query["type"] == "raw" { query["type"] = "tcp" }
         let user = components.user ?? ""
         var profile = ProxyProfile(name: components.fragment?.isEmpty == false ? components.fragment! : host, kind: kind, host: host.trimmingCharacters(in: CharacterSet(charactersIn: "[]")), port: port, credential: kind == .socks ? components.password ?? "" : user, query: query)
         if kind == .socks { profile.username = user }

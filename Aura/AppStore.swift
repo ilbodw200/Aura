@@ -69,13 +69,32 @@ final class AppStore {
             }
         } catch { message = error.localizedDescription; log("Подключение не выполнено.") }
     }
-    func refreshSubscription(_ id: UUID) async {
+    func addSubscription(name: String, url: URL, sendHWID: Bool, allowHTTP: Bool, verifiedURL: URL?, contents: SubscriptionContents?) throws -> UUID {
+        try requireDisconnected()
+        guard storageReady else { throw AuraError.message("Хранилище недоступно. Ссылка не была сохранена.") }
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw AuraError.message("Введите название подписки.") }
+        try SubscriptionRequest.validateForSaving(url: url, allowHTTP: allowHTTP, verifiedURL: verifiedURL, profileCount: contents?.profiles.count ?? 0)
+        guard !snapshot.subscriptions.contains(where: { $0.url == url }) else { throw AuraError.message("Эта подписка уже добавлена. Обновите её во вкладке «Серверы».") }
+        guard snapshot.profiles.count + (contents?.profiles.count ?? 0) <= 1000 else { throw AuraError.message("Достигнут лимит 1000 профилей.") }
+        let subscription = Subscription(name: name, url: url, updatedAt: contents == nil ? nil : .now, sendHWID: url.scheme?.lowercased() == "https" && sendHWID, allowHTTP: allowHTTP, lastWarning: contents?.warnings.isEmpty == false ? contents?.warnings.prefix(5).joined(separator: "\n") : nil)
+        snapshot.subscriptions.append(subscription)
+        if let contents {
+            var profiles = contents.profiles
+            for index in profiles.indices { profiles[index].subscriptionID = subscription.id }
+            snapshot.profiles += profiles
+            if snapshot.selectedID == nil { snapshot.selectedID = profiles.first?.id }
+        }
+        persist()
+        return subscription.id
+    }
+    func refreshSubscription(_ id: UUID, reportError: Bool = true) async {
         guard !busy, let subscription = snapshot.subscriptions.first(where: { $0.id == id }) else { return }
         busy = true; defer { busy = false }
         do {
             try requireDisconnected()
-            let metadata = (subscription.sendHWID ?? snapshot.sendHWID ?? false) ? try DeviceIdentity.metadata() : nil
-            var incoming = try await SubscriptionService.fetch(subscription.url, metadata: metadata)
+            let metadata = subscription.url.scheme?.lowercased() == "https" && (subscription.sendHWID ?? snapshot.sendHWID ?? false) ? try DeviceIdentity.metadata() : nil
+            let result = try await SubscriptionService.fetch(subscription.url, metadata: metadata, allowHTTP: subscription.allowHTTP ?? false)
+            var incoming = result.profiles
             // The user may have connected while the network request was running.
             try requireDisconnected()
             guard snapshot.subscriptions.contains(where: { $0.id == id }) else { return }
@@ -87,14 +106,19 @@ final class AppStore {
                 }
             }
             guard snapshot.profiles.count - old.count + incoming.count <= 1000 else { throw AuraError.message("В подписке слишком много серверов.") }
-            snapshot.profiles.removeAll { $0.subscriptionID == id }; snapshot.profiles += incoming
+            // A partial response must not delete previously imported servers that
+            // could not be decoded in this response.
+            let retained = result.skippedCount == 0 ? [] : old.filter { previous in !incoming.contains(where: { $0.id == previous.id }) }
+            guard snapshot.profiles.count - old.count + incoming.count + retained.count <= 1000 else { throw AuraError.message("Достигнут лимит 1000 профилей.") }
+            snapshot.profiles.removeAll { $0.subscriptionID == id }; snapshot.profiles += incoming + retained
             if !snapshot.profiles.contains(where: { $0.id == snapshot.selectedID }) { snapshot.selectedID = incoming.first?.id }
-            if let index = snapshot.subscriptions.firstIndex(where: { $0.id == id }) { snapshot.subscriptions[index].updatedAt = .now; snapshot.subscriptions[index].lastError = nil }
+            if let index = snapshot.subscriptions.firstIndex(where: { $0.id == id }) { snapshot.subscriptions[index].updatedAt = .now; snapshot.subscriptions[index].lastError = nil; snapshot.subscriptions[index].lastWarning = result.warnings.isEmpty ? nil : result.warnings.prefix(5).joined(separator: "\n") }
             persist(); log("Подписка обновлена: \(incoming.count) серверов.")
         } catch {
             // URLs may contain provider tokens; never put raw network errors into the UI log.
-            if let index = snapshot.subscriptions.firstIndex(where: { $0.id == id }) { snapshot.subscriptions[index].lastError = "Не удалось обновить. Предыдущие серверы сохранены." }
-            persist(); message = "Подписка не обновлена. Проверьте HTTPS-ссылку и поддерживаемые форматы. Предыдущие серверы сохранены."
+            let detail = SubscriptionService.message(for: error)
+            if let index = snapshot.subscriptions.firstIndex(where: { $0.id == id }) { snapshot.subscriptions[index].lastError = detail }
+            persist(); if reportError { message = detail }
             log("Обновление подписки не выполнено.")
         }
     }

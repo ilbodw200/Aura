@@ -10,12 +10,17 @@ struct SubscriptionEditor: View {
         NavigationStack {
             Form {
                 Section("Подписка") { TextField("Название", text: $subscription.name) }
+                Section {
+                    Label(subscription.url.scheme == "https" ? "HTTPS · TLS при загрузке" : "HTTP · разрешён после дополнительной проверки", systemImage: subscription.url.scheme == "https" ? "lock.fill" : "lock.slash")
+                    if let error = subscription.lastError { Text(error).foregroundStyle(.orange) }
+                    if let warning = subscription.lastWarning { Text(warning).font(.caption).foregroundStyle(.orange) }
+                }
                 Section("Привязка устройства") {
                     Picker("Отправка HWID", selection: Binding(get: { subscription.sendHWID.map { $0 ? 1 : 2 } ?? 0 }, set: { subscription.sendHWID = $0 == 0 ? nil : $0 == 1 })) {
                         Text("Как в настройках приложения").tag(0)
                         Text("Отправлять HWID").tag(1)
                         Text("Не отправлять").tag(2)
-                    }
+                    }.disabled(subscription.url.scheme != "https")
                     if !hwid.isEmpty {
                         Text(hwid).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
                         Button("Скопировать HWID") { UIPasteboard.general.string = hwid }

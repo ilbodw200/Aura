@@ -27,10 +27,11 @@ struct ProfilesView: View {
                     ForEach(store.snapshot.subscriptions) { subscription in
                         HStack {
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(subscription.name).font(.headline)
-                                if subscription.lastError != nil { Text("Ошибка обновления · серверы сохранены").font(.caption).foregroundStyle(.orange) }
+                                Label(subscription.name, systemImage: subscription.url.scheme?.lowercased() == "https" ? "lock.fill" : "lock.slash").font(.headline)
+                                if let error = subscription.lastError { Text(error).font(.caption).foregroundStyle(.orange).lineLimit(3) }
+                                else if subscription.lastWarning != nil { Text("Загружены совместимые записи · есть предупреждения").font(.caption).foregroundStyle(.orange) }
                                 else if let date = subscription.updatedAt { Text("Обновлено \(date.formatted(date: .abbreviated, time: .shortened))").font(.caption).foregroundStyle(.secondary) }
-                                else { Text("Ещё не обновлялась").font(.caption).foregroundStyle(.secondary) }
+                                else { Text(store.busy ? "Загружаем серверы…" : "Ссылка сохранена · обновите список серверов").font(.caption).foregroundStyle(.secondary) }
                             }
                             Spacer()
                             Button { editingSubscription = subscription } label: { Image(systemName: "slider.horizontal.3").frame(width: 44, height: 44) }.buttonStyle(.borderless).accessibilityLabel("Настройки подписки \(subscription.name)")

@@ -118,4 +118,47 @@ final class CoreTests: XCTestCase {
         json.removeValue(forKey: "sendHWID")
         XCTAssertNil(try JSONDecoder().decode(AppSnapshot.self, from: JSONSerialization.data(withJSONObject: json)).sendHWID)
     }
+
+    func testHTTPSCanBeSavedBeforeAnyNetworkCheck() throws {
+        let secure = try XCTUnwrap(URL(string: "https://provider.example/sub"))
+        XCTAssertNoThrow(try SubscriptionRequest.validateForSaving(url: secure, allowHTTP: false, verifiedURL: nil, profileCount: 0))
+        let plain = try XCTUnwrap(URL(string: "http://provider.example/sub"))
+        XCTAssertThrowsError(try SubscriptionRequest.validateForSaving(url: plain, allowHTTP: false, verifiedURL: nil, profileCount: 0))
+        XCTAssertThrowsError(try SubscriptionRequest.validateForSaving(url: plain, allowHTTP: true, verifiedURL: nil, profileCount: 1))
+        XCTAssertThrowsError(try SubscriptionRequest.validateForSaving(url: plain, allowHTTP: true, verifiedURL: secure, profileCount: 1))
+        XCTAssertThrowsError(try SubscriptionRequest.validateForSaving(url: plain, allowHTTP: true, verifiedURL: plain, profileCount: 0))
+        XCTAssertNoThrow(try SubscriptionRequest.validateForSaving(url: plain, allowHTTP: true, verifiedURL: plain, profileCount: 1))
+    }
+
+    func testHTTPNeverReceivesDeviceHeadersAndHTTPSCannotDowngrade() throws {
+        let plain = try XCTUnwrap(URL(string: "http://provider.example/sub"))
+        let metadata = DeviceMetadata(hwid: "private-device", os: "iOS", osVersion: "26", model: "iPhone", deviceInfo: "AURA")
+        XCTAssertThrowsError(try SubscriptionRequest.make(url: plain, metadata: metadata))
+        let request = try SubscriptionRequest.make(url: plain, metadata: metadata, allowHTTP: true)
+        XCTAssertNil(request.value(forHTTPHeaderField: "X-HWID"))
+        XCTAssertNotNil(SubscriptionRequest.redirect(request, from: plain, allowHTTP: true))
+        XCTAssertNil(SubscriptionRequest.redirect(request, from: URL(string: "https://provider.example/sub"), allowHTTP: true))
+    }
+
+    func testSubscriptionImportsCompatibleLinesWithWarnings() throws {
+        let text = "vless://\(uuid)@example.com:443?type=raw&security=reality&pbk=key&spx=%2F&headerType=none#Reality\nvless://\(uuid)@other.example:443?type=xhttp#XHTTP"
+        let result = try SubscriptionDocument.parse(Data(text.utf8).base64EncodedString())
+        XCTAssertEqual(result.profiles.count, 1)
+        XCTAssertEqual(result.profiles[0].query["type"], "tcp")
+        XCTAssertEqual(result.skippedCount, 1)
+        XCTAssertTrue(result.warnings[0].contains("xhttp"))
+        XCTAssertThrowsError(try SubscriptionDocument.parse("<!doctype html><html>Provider page</html>"))
+    }
+
+    func testXrayAndSingBoxJSONSubscriptions() throws {
+        let xray: [String: Any] = ["remarks": "Xray JSON", "outbounds": [["protocol": "vless", "settings": ["vnext": [["address": "example.com", "port": 443, "users": [["id": uuid, "flow": "xtls-rprx-vision"]]]]], "streamSettings": ["network": "raw", "security": "reality", "realitySettings": ["publicKey": "test-key", "shortId": "ab", "serverName": "example.com", "fingerprint": "chrome"]]]]]
+        let xrayResult = try SubscriptionDocument.parse(String(decoding: JSONSerialization.data(withJSONObject: [xray]), as: UTF8.self))
+        XCTAssertEqual(xrayResult.profiles[0].name, "Xray JSON")
+        XCTAssertEqual(xrayResult.profiles[0].query["pbk"], "test-key")
+        let singBox = "{\"outbounds\":[{\"type\":\"trojan\",\"tag\":\"JSON server\",\"server\":\"example.com\",\"server_port\":443,\"password\":\"secret\",\"tls\":{\"enabled\":true,\"server_name\":\"example.com\"}}]}"
+        let singResult = try SubscriptionDocument.parse(singBox)
+        XCTAssertEqual(singResult.profiles[0].kind, .trojan)
+        XCTAssertEqual(singResult.profiles[0].credential, "secret")
+        XCTAssertNoThrow(try ConfigBuilder.build(profile: singResult.profiles[0], snapshot: AppSnapshot()))
+    }
 }

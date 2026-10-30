@@ -12,7 +12,11 @@ struct ImportView: View {
     @State private var fileImporter = false
     @State private var isLoading = false
     @State private var sendHWID = false
-    private var subscriptionURL: URL? { let text = input.trimmingCharacters(in: .whitespacesAndNewlines); guard !text.contains("\n"), let url = URL(string: text), url.scheme == "https" else { return nil }; return url }
+    @State private var allowHTTP = false
+    @State private var verifiedURL: URL?
+    @State private var warnings: [String] = []
+    private var subscriptionURL: URL? { let text = input.trimmingCharacters(in: .whitespacesAndNewlines); guard !text.contains("\n"), let url = URL(string: text), ["https", "http"].contains(url.scheme?.lowercased() ?? ""), url.host?.isEmpty == false else { return nil }; return url }
+    private var secureSubscription: Bool { subscriptionURL?.scheme?.lowercased() == "https" }
     var body: some View {
         NavigationStack {
             Form {
@@ -20,7 +24,7 @@ struct ImportView: View {
                     Text("Одно место для всех ваших серверов.").font(.title2.bold()).padding(.vertical, 10)
                     TextEditor(text: $input).frame(minHeight: 140).font(.system(.footnote, design: .monospaced))
                         .autocorrectionDisabled().textInputAutocapitalization(.never).accessibilityLabel("Ссылка конфигурации или HTTPS-подписки")
-                        .onChange(of: input) { preview = []; error = nil }
+                        .onChange(of: input) { preview = []; warnings = []; verifiedURL = nil; allowHTTP = false; error = nil }
                 } header: { Text("Ссылка или список конфигураций") } footer: { Text("VLESS / Reality · VMess · Trojan · Shadowsocks · SOCKS5 · Hysteria2. Собственные зашифрованные форматы Happ пока не поддерживаются.") }
                 Section {
                     Button("Вставить из буфера", systemImage: "doc.on.clipboard") { input = UIPasteboard.general.string ?? "" }
@@ -30,18 +34,30 @@ struct ImportView: View {
                 if subscriptionURL != nil {
                     Section("Подписка") {
                         TextField("Название подписки", text: $name)
+                        Label(secureSubscription ? "HTTPS · защищённое соединение" : "HTTP · без шифрования", systemImage: secureSubscription ? "lock.fill" : "lock.slash")
+                            .foregroundStyle(secureSubscription ? .green : .orange)
+                        if secureSubscription {
+                            Text("Можно добавить сразу. Сертификат и формат ответа проверяются при загрузке серверов; предварительная проверка не обязательна.").font(.caption).foregroundStyle(.secondary)
+                            Button("Добавить подписку") { commit() }.fontWeight(.semibold).disabled(isLoading)
+                        } else {
+                            Text("HTTP передаёт ссылку и конфигурации без шифрования. Для сохранения нужно принять предупреждение и проверить доступность и формат. Успешная проверка не добавляет шифрование.").font(.caption).foregroundStyle(.orange)
+                            Toggle("Разрешаю загрузку по HTTP для этой подписки", isOn: $allowHTTP)
+                                .onChange(of: allowHTTP) { preview = []; verifiedURL = nil }
+                        }
                         Toggle("Отправлять HWID провайдеру", isOn: $sendHWID)
-                            .onChange(of: sendHWID) { preview = [] }
+                            .onChange(of: sendHWID) { preview = []; verifiedURL = nil }
+                            .disabled(!secureSubscription)
                         Text("Передаёт HWID AURA, модель и версию iOS только серверу этой подписки. Может требоваться для регистрации устройства у провайдера.").font(.caption).foregroundStyle(.secondary)
-                        Text("После проверки AURA загрузит список серверов по этой ссылке. Адрес хранится в зашифрованном хранилище.").font(.caption).foregroundStyle(.secondary)
+                        Text(secureSubscription ? "После добавления список серверов обновится автоматически. Ссылка остаётся сохранённой даже при ошибке загрузки." : "HWID и данные устройства по HTTP не отправляются.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 if let error { Section { Text(error).foregroundStyle(.red) } }
+                if !warnings.isEmpty { Section("Не все записи поддерживаются") { ForEach(Array(warnings.prefix(5).enumerated()), id: \.offset) { _, text in Text(text).font(.caption).foregroundStyle(.orange) } } }
                 if !preview.isEmpty {
                     Section("Будет добавлено: \(preview.count)") { ForEach(preview) { profile in VStack(alignment: .leading) { Text(profile.name); Text(profile.kind.title).font(.caption).foregroundStyle(.secondary) } } }
-                    Section { Button("Добавить профили") { commit() }.fontWeight(.semibold) }
+                    if !secureSubscription { Section { Button(subscriptionURL == nil ? "Добавить профили" : "Сохранить проверенную HTTP-подписку") { commit() }.fontWeight(.semibold) } }
                 } else {
-                    Section { Button { Task { await inspect() } } label: { HStack { Text(isLoading ? "Проверяем…" : "Проверить конфигурацию"); Spacer(); if isLoading { ProgressView() } } }.disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading) }
+                    Section { Button { Task { await inspect() } } label: { HStack { Text(isLoading ? "Загружаем…" : secureSubscription ? "Проверить серверы сейчас (необязательно)" : subscriptionURL != nil ? "Проверить доступность и формат" : "Проверить конфигурацию"); Spacer(); if isLoading { ProgressView() } } }.disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading || (subscriptionURL != nil && !secureSubscription && !allowHTTP)) }
                 }
             }.navigationTitle("Добавить подключение").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Закрыть") { dismiss() } } }
@@ -63,28 +79,33 @@ struct ImportView: View {
         isLoading = true; error = nil; defer { isLoading = false }
         let candidate = input
         let candidateHWID = sendHWID
+        let candidateHTTP = allowHTTP
         do {
             try store.requireDisconnected()
             let profiles: [ProxyProfile]
-            if let url = subscriptionURL { profiles = try await SubscriptionService.fetch(url, metadata: candidateHWID ? try DeviceIdentity.metadata() : nil) }
+            if let url = subscriptionURL {
+                let result = try await SubscriptionService.fetch(url, metadata: secureSubscription && candidateHWID ? try DeviceIdentity.metadata() : nil, allowHTTP: candidateHTTP)
+                guard candidate == input, candidateHWID == sendHWID, candidateHTTP == allowHTTP else { return }
+                profiles = result.profiles; warnings = result.warnings; verifiedURL = url
+            }
             else { profiles = try ProfileParser.parse(candidate) }
             guard candidate == input, candidateHWID == sendHWID else { return }
             preview = profiles
-        } catch { self.error = subscriptionURL != nil ? "Не удалось проверить подписку. Проверьте HTTPS-адрес и поддерживаемые форматы конфигураций." : error.localizedDescription }
+        } catch { self.error = subscriptionURL != nil ? SubscriptionService.message(for: error) : error.localizedDescription }
     }
     private func commit() {
         do {
             try store.requireDisconnected()
-            var profiles = preview
-            var subscription: Subscription?
+            let profiles = preview
             if let url = subscriptionURL {
-                guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw AuraError.message("Введите название подписки.") }
-                let new = Subscription(name: name, url: url, updatedAt: .now, sendHWID: sendHWID)
-                subscription = new
-                for index in profiles.indices { profiles[index].subscriptionID = new.id }
+                let contents = preview.isEmpty ? nil : SubscriptionContents(profiles: preview, warnings: warnings)
+                let id = try store.addSubscription(name: name, url: url, sendHWID: sendHWID, allowHTTP: allowHTTP, verifiedURL: verifiedURL, contents: contents)
+                NotificationCenter.default.post(name: .auraSubscriptionAdded, object: nil)
+                dismiss()
+                if contents == nil { Task { await store.refreshSubscription(id, reportError: false) } }
+                return
             }
             try store.add(profiles)
-            if let subscription { store.snapshot.subscriptions.append(subscription); store.persist() }
             dismiss()
         } catch { self.error = error.localizedDescription }
     }

@@ -73,7 +73,7 @@ enum BackupService {
         for profile in snapshot.profiles { try ConfigBuilder.validate(profile) }
         for rule in snapshot.rules { try RoutingRule.validate(rule.value, kind: rule.kind) }
         for subscription in snapshot.subscriptions {
-            guard subscription.url.scheme == "https", subscription.url.host != nil, subscription.url.user == nil, subscription.url.password == nil else { throw AuraError.message("В копии небезопасный адрес подписки.") }
+            try SubscriptionRequest.validate(url: subscription.url, allowHTTP: subscription.allowHTTP ?? false)
         }
         guard ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query", "https://9.9.9.9/dns-query"].contains(snapshot.dns) else { throw AuraError.message("В копии неизвестная настройка DNS.") }
         snapshot.appearance.cornerRadius = min(36, max(12, snapshot.appearance.cornerRadius))
