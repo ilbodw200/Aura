@@ -64,6 +64,7 @@ public final class Core {
         }
         if(host!=null&&host.startsWith("["))host=host.substring(1,host.length()-1);
         if(name.isEmpty())name=host;
+        if(q.optString("type").equals("raw"))q.put("type","tcp");
         p=obj("id",UUID.randomUUID().toString(),"name",name,"type",type,"host",host,"port",port,"credential",credential,"username",username,"method",method,"query",q,"favorite",false,"source",raw);
         validate(p); return p;
     }
@@ -74,13 +75,15 @@ public final class Core {
         if(!type.equals("socks")&&p.optString("credential").isEmpty())throw new Exception("Нет ключа или пароля.");
         if(type.equals("vless")||type.equals("vmess")){try{String id=p.getString("credential");if(!UUID.fromString(id).toString().equalsIgnoreCase(id))throw new Exception();}catch(Exception e){throw new Exception("Нужен корректный UUID.");}}
         JSONObject q=p.getJSONObject("query");
-        Set<String> allowed=new HashSet<>(Arrays.asList("type","security","sni","peer","fp","pbk","sid","flow","path","host","serviceName","alpn","encryption","scy","aid","allowInsecure","insecure","obfs","obfs-password"));
+        Set<String> allowed=new HashSet<>(Arrays.asList("type","security","sni","peer","fp","pbk","sid","flow","path","host","serviceName","alpn","encryption","scy","aid","allowInsecure","insecure","obfs","obfs-password","spx","headerType","packetEncoding"));
         Iterator<String> keys=q.keys();while(keys.hasNext()){String key=keys.next();if(!allowed.contains(key))throw new Exception("Параметр "+key+" пока не поддерживается.");}
         if(!Arrays.asList("tcp","ws","grpc","http").contains(q.optString("type","tcp")))throw new Exception("Этот транспорт пока не поддерживается.");
         if(!Arrays.asList("none","tls","reality","").contains(q.optString("security","none")))throw new Exception("Неизвестный режим TLS.");
         if(q.optString("security").equals("reality")&&q.optString("pbk").isEmpty())throw new Exception("Для Reality нужен ключ pbk.");
         if(q.optString("insecure").equals("1")||q.optString("allowInsecure").equals("1"))throw new Exception("Проверка TLS обязательна; исправьте сертификат сервера.");
         if(!Arrays.asList("","xtls-rprx-vision").contains(q.optString("flow")))throw new Exception("Неподдерживаемый flow.");
+        if(!Arrays.asList("","none").contains(q.optString("headerType")))throw new Exception("Этот TCP headerType пока не поддерживается.");
+        if(q.has("packetEncoding")&&!Arrays.asList("xudp","packetaddr").contains(q.getString("packetEncoding")))throw new Exception("Неизвестный packetEncoding.");
         if(q.has("encryption")&&!q.getString("encryption").equals("none"))throw new Exception("Неподдерживаемый VLESS encryption.");
         if(type.equals("shadowsocks")&&!Arrays.asList("aes-128-gcm","aes-256-gcm","chacha20-ietf-poly1305","2022-blake3-aes-128-gcm","2022-blake3-aes-256-gcm","2022-blake3-chacha20-poly1305").contains(p.getString("method")))throw new Exception("Этот метод Shadowsocks пока не поддерживается.");
     }
@@ -99,6 +102,7 @@ public final class Core {
             case "socks":out.put("version","5").put("username",p.optString("username")).put("password",p.optString("credential"));break;
         }
         String security=q.optString("security",type.equals("trojan")||type.equals("hysteria2")?"tls":"none");
+        if((type.equals("vless")||type.equals("vmess"))&&q.has("packetEncoding"))out.put("packet_encoding",q.getString("packetEncoding"));
         if(security.equals("tls")||security.equals("reality")){
             JSONObject tls=obj("enabled",true,"server_name",q.optString("sni",q.optString("peer",p.getString("host"))));
             if(q.has("fp"))tls.put("utls",obj("enabled",true,"fingerprint",q.getString("fp")));

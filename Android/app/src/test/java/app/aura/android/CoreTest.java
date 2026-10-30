@@ -21,4 +21,7 @@ public class CoreTest {
         assertThrows(Exception.class,()->Core.validateSubscriptionForSaving("http://provider.example/sub",true,"http://other.example/sub",1));
         Core.validateSubscriptionForSaving("http://provider.example/sub",true,"http://provider.example/sub",1);
     }
+    @Test public void realityLinkDefaultsAreAccepted()throws Exception{
+        JSONObject p=Core.link("vless://"+uuid+"@example.com:443?type=raw&security=reality&pbk=key&headerType=none&spx=%2F");assertEquals("tcp",p.getJSONObject("query").getString("type"));
+    }
 }
