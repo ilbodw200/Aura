@@ -1,0 +1,16 @@
+DerivedData/
+.build/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+Vendor/
+*.aurabackup
+node_modules/
+.tools/
+build/
+dist/
+*.ipa
+*.xcarchive/
+*.p12
+*.mobileprovision
+build-ipa.*/

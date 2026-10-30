@@ -1,0 +1,120 @@
+// !$*UTF8*$!
+{archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+/* Begin PBXBuildFile section */
+BC58A09AF44D24465F823579 = {isa = PBXBuildFile; fileRef = 8FB958F3DF5367A3C3BA2963; settings = {ATTRIBUTES = (RemoveHeadersOnCopy,);};};
+6487B95E6E87BD516ED50319 = {isa = PBXBuildFile; fileRef = 3C9B9BF6D7E7ACB7C1D54487;};
+0D7252C2C93B92D5362C10A9 = {isa = PBXBuildFile; fileRef = FACCB9AB9AA902E533099857;};
+E8E053717DE118FD66D8F8B7 = {isa = PBXBuildFile; fileRef = EF7801D57293EFF62BCE6DCD;};
+A6D663D15E746EA45CCE6CD7 = {isa = PBXBuildFile; fileRef = 30D42B15D55FA0CD1386DDA2;};
+DA783B24BABD5BCF58183DF7 = {isa = PBXBuildFile; fileRef = 85C783534BDBBE23F9C8459C;};
+BDDFD513E7AE7D1F4C109F40 = {isa = PBXBuildFile; fileRef = 6CEEA92622D22DF44197C995;};
+F508A2D7623F9C65D53A4EFD = {isa = PBXBuildFile; fileRef = 999E945521B7772C43031F98;};
+E2A173E50FF0DA30701384D8 = {isa = PBXBuildFile; fileRef = 4BED8DF9484E26A2BA4F6DCF;};
+49E7332EA41EB991C36B60F2 = {isa = PBXBuildFile; fileRef = 7EF26D9D5E2B8A543B06237E;};
+3306C33A5E140C3F832CAA52 = {isa = PBXBuildFile; fileRef = DBAB6850BA4398E9AB8999EE;};
+5A0F7D703E3255C4BF537E90 = {isa = PBXBuildFile; fileRef = 6C81EE60592059D8BCEDA8A0;};
+1F2EFD88D2A7DFB168E3C3C0 = {isa = PBXBuildFile; fileRef = 9B55086A68D5D19DDE497301;};
+534C5E80ED7BD02A3D56EA82 = {isa = PBXBuildFile; fileRef = 9FC3ACEDD5BC3E55CCA4A5CE;};
+551E3D824F5F53C74AA50313 = {isa = PBXBuildFile; fileRef = B839CC6A484F8953F44B2B14;};
+257AF2CF0FA1178FFD21AFDD = {isa = PBXBuildFile; fileRef = D6ABB1C5FE9F885FF88FE05A;};
+EA91B9ECEC336C436E2D3ED2 = {isa = PBXBuildFile; fileRef = 34D3E8524BA770DC83560B7F;};
+4415112940CAA23750DC94AB = {isa = PBXBuildFile; fileRef = DB3D9143CAA6520E066B50BE;};
+5F463724DFC33B343ED0CE81 = {isa = PBXBuildFile; fileRef = 0E53682D857CE4C521026A72;};
+164C2A4743B6B1985EEE045C = {isa = PBXBuildFile; fileRef = 33F6EF03795119E2B0E0C02A;};
+CC2581CAD222A7116CC479B8 = {isa = PBXBuildFile; fileRef = 208527A1E2D11C79F3AFD373;};
+045076B9F7BC8D61C802CB48 = {isa = PBXBuildFile; fileRef = ECA84335B1DEBE2F0B0FBCA9;};
+A42D7944434E72F925B6ABED = {isa = PBXBuildFile; fileRef = 090D3670215CA4AE193777AC;};
+133DF62AB2280CBC3A2F4DF1 = {isa = PBXBuildFile; fileRef = 71AFB8C42651464B1EC844B1;};
+49E0F4B444DD39971773BFD6 = {isa = PBXBuildFile; fileRef = 0E53682D857CE4C521026A72;};
+4558DFD76E649AABF6538A39 = {isa = PBXBuildFile; fileRef = 33F6EF03795119E2B0E0C02A;};
+4CC594B4099F087FBAA861ED = {isa = PBXBuildFile; fileRef = 208527A1E2D11C79F3AFD373;};
+9806F1A0BFFEE106FF915C35 = {isa = PBXBuildFile; fileRef = 7FABE174E0F7A3305D2AB747;};
+/* End PBXBuildFile section */
+/* Begin PBXContainerItemProxy section */
+E503D44F79C0CEE9A2EB124F = {isa = PBXContainerItemProxy; containerPortal = 244210E48437B6556980A702; proxyType = 1; remoteGlobalIDString = 4E3572EC3F7F10692B2CEE0E; remoteInfo = AuraTunnel;};
+DF36E498C8177F5443A5C558 = {isa = PBXContainerItemProxy; containerPortal = 244210E48437B6556980A702; proxyType = 1; remoteGlobalIDString = 4E496583F01DE0658DC70B3F; remoteInfo = Aura;};
+/* End PBXContainerItemProxy section */
+/* Begin PBXCopyFilesBuildPhase section */
+88A8FBADE0C2EEDC2C61B4FD = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (BC58A09AF44D24465F823579,); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0;};
+/* End PBXCopyFilesBuildPhase section */
+/* Begin PBXFileReference section */
+3C9B9BF6D7E7ACB7C1D54487 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/AppStore.swift"; sourceTree = "<group>";};
+FACCB9AB9AA902E533099857 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/AuraApp.swift"; sourceTree = "<group>";};
+EF7801D57293EFF62BCE6DCD = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Design/DesignSystem.swift"; sourceTree = "<group>";};
+30D42B15D55FA0CD1386DDA2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/AppearanceView.swift"; sourceTree = "<group>";};
+85C783534BDBBE23F9C8459C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/BackupView.swift"; sourceTree = "<group>";};
+6CEEA92622D22DF44197C995 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/DashboardView.swift"; sourceTree = "<group>";};
+999E945521B7772C43031F98 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/DiagnosticsView.swift"; sourceTree = "<group>";};
+4BED8DF9484E26A2BA4F6DCF = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/ImportView.swift"; sourceTree = "<group>";};
+7EF26D9D5E2B8A543B06237E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/ProfilesView.swift"; sourceTree = "<group>";};
+DBAB6850BA4398E9AB8999EE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/RoutingView.swift"; sourceTree = "<group>";};
+6C81EE60592059D8BCEDA8A0 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/ScannerSheet.swift"; sourceTree = "<group>";};
+9B55086A68D5D19DDE497301 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Features/SettingsView.swift"; sourceTree = "<group>";};
+9FC3ACEDD5BC3E55CCA4A5CE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/RootView.swift"; sourceTree = "<group>";};
+B839CC6A484F8953F44B2B14 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Services/LatencyService.swift"; sourceTree = "<group>";};
+D6ABB1C5FE9F885FF88FE05A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Services/SecureStore.swift"; sourceTree = "<group>";};
+34D3E8524BA770DC83560B7F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Services/SubscriptionService.swift"; sourceTree = "<group>";};
+DB3D9143CAA6520E066B50BE = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Aura/Services/TunnelController.swift"; sourceTree = "<group>";};
+0E53682D857CE4C521026A72 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/ConfigBuilder.swift"; sourceTree = "<group>";};
+33F6EF03795119E2B0E0C02A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/Models.swift"; sourceTree = "<group>";};
+208527A1E2D11C79F3AFD373 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/ProfileParser.swift"; sourceTree = "<group>";};
+090D3670215CA4AE193777AC = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tunnel/BoxPlatform.swift"; sourceTree = "<group>";};
+71AFB8C42651464B1EC844B1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tunnel/PacketTunnelProvider.swift"; sourceTree = "<group>";};
+7FABE174E0F7A3305D2AB747 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests/CoreTests.swift"; sourceTree = "<group>";};
+ECA84335B1DEBE2F0B0FBCA9 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Aura/Assets.xcassets"; sourceTree = "<group>";};
+7C0858417E8594228ED3CE0A = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Config/App-Info.plist"; sourceTree = "<group>";};
+6ED8CF71D71DCBEBF373A6FF = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Config/Tunnel-Info.plist"; sourceTree = "<group>";};
+6B7C5F8432B968C375C9E6E7 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Config/App.entitlements"; sourceTree = "<group>";};
+FDC16AB9967F2662353E4558 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Config/Tunnel.entitlements"; sourceTree = "<group>";};
+6E1F8DA1FC3C0D89DE300F1E = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aura.app; sourceTree = BUILT_PRODUCTS_DIR;};
+8FB958F3DF5367A3C3BA2963 = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = AuraTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR;};
+72EF2C2136F818FBB353B43C = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AuraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR;};
+/* End PBXFileReference section */
+/* Begin PBXFrameworksBuildPhase section */
+85BF01BAE2C1E857B19FE955 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+76E637401146223FECD6B2E8 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+9D7E8953BDB57109745B2E45 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+/* End PBXFrameworksBuildPhase section */
+/* Begin PBXGroup section */
+0A3E27B8CA818264D75C8D81 = {isa = PBXGroup; children = (6E1F8DA1FC3C0D89DE300F1E,8FB958F3DF5367A3C3BA2963,72EF2C2136F818FBB353B43C,); name = Products; sourceTree = "<group>";};
+C8D2DC745BFC63C0D67231CE = {isa = PBXGroup; children = (3C9B9BF6D7E7ACB7C1D54487,FACCB9AB9AA902E533099857,EF7801D57293EFF62BCE6DCD,30D42B15D55FA0CD1386DDA2,85C783534BDBBE23F9C8459C,6CEEA92622D22DF44197C995,999E945521B7772C43031F98,4BED8DF9484E26A2BA4F6DCF,7EF26D9D5E2B8A543B06237E,DBAB6850BA4398E9AB8999EE,6C81EE60592059D8BCEDA8A0,9B55086A68D5D19DDE497301,9FC3ACEDD5BC3E55CCA4A5CE,B839CC6A484F8953F44B2B14,D6ABB1C5FE9F885FF88FE05A,34D3E8524BA770DC83560B7F,DB3D9143CAA6520E066B50BE,0E53682D857CE4C521026A72,33F6EF03795119E2B0E0C02A,208527A1E2D11C79F3AFD373,090D3670215CA4AE193777AC,71AFB8C42651464B1EC844B1,7FABE174E0F7A3305D2AB747,ECA84335B1DEBE2F0B0FBCA9,7C0858417E8594228ED3CE0A,6ED8CF71D71DCBEBF373A6FF,6B7C5F8432B968C375C9E6E7,FDC16AB9967F2662353E4558,0A3E27B8CA818264D75C8D81,); sourceTree = "<group>";};
+/* End PBXGroup section */
+/* Begin PBXNativeTarget section */
+4E496583F01DE0658DC70B3F = {isa = PBXNativeTarget; buildConfigurationList = 73DAA91C8C3923FBD9E7A43F; buildPhases = (0E4BC0E63BC7B2723A362658,85BF01BAE2C1E857B19FE955,E7F3E6CD797CD04A60726E73,88A8FBADE0C2EEDC2C61B4FD,); buildRules = (); dependencies = (D866B9FF1948F84200A99C44,); name = Aura; productName = Aura; productReference = 6E1F8DA1FC3C0D89DE300F1E; productType = "com.apple.product-type.application";};
+4E3572EC3F7F10692B2CEE0E = {isa = PBXNativeTarget; buildConfigurationList = 9DC943C57F8A26024E8BE1A1; buildPhases = (68AD63482A564744255445D8,76E637401146223FECD6B2E8,53E90691806642D2B7B7EF56,); buildRules = (); dependencies = (); name = AuraTunnel; productName = AuraTunnel; productReference = 8FB958F3DF5367A3C3BA2963; productType = "com.apple.product-type.app-extension";};
+F7156FCC018E03A54632C639 = {isa = PBXNativeTarget; buildConfigurationList = BB2844EB3492B1069418ED71; buildPhases = (2598EDEECA1857C47E2AB077,9D7E8953BDB57109745B2E45,800FA15BF68963799473C260,); buildRules = (); dependencies = (FD6EEE094AFC4D970A166C62,); name = AuraTests; productName = AuraTests; productReference = 72EF2C2136F818FBB353B43C; productType = "com.apple.product-type.bundle.unit-test";};
+/* End PBXNativeTarget section */
+/* Begin PBXProject section */
+244210E48437B6556980A702 = {isa = PBXProject; attributes = {LastUpgradeCheck = 2600;}; buildConfigurationList = 1922B098E983995960BE56B0; compatibilityVersion = "Xcode 14.0"; developmentRegion = ru; hasScannedForEncodings = 0; knownRegions = (ru,en,Base,); mainGroup = C8D2DC745BFC63C0D67231CE; productRefGroup = 0A3E27B8CA818264D75C8D81; projectDirPath = ""; projectRoot = ""; targets = (4E496583F01DE0658DC70B3F,4E3572EC3F7F10692B2CEE0E,F7156FCC018E03A54632C639,);};
+/* End PBXProject section */
+/* Begin PBXResourcesBuildPhase section */
+E7F3E6CD797CD04A60726E73 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (045076B9F7BC8D61C802CB48,); runOnlyForDeploymentPostprocessing = 0;};
+53E90691806642D2B7B7EF56 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+800FA15BF68963799473C260 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+/* End PBXResourcesBuildPhase section */
+/* Begin PBXSourcesBuildPhase section */
+0E4BC0E63BC7B2723A362658 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (6487B95E6E87BD516ED50319,0D7252C2C93B92D5362C10A9,E8E053717DE118FD66D8F8B7,A6D663D15E746EA45CCE6CD7,DA783B24BABD5BCF58183DF7,BDDFD513E7AE7D1F4C109F40,F508A2D7623F9C65D53A4EFD,E2A173E50FF0DA30701384D8,49E7332EA41EB991C36B60F2,3306C33A5E140C3F832CAA52,5A0F7D703E3255C4BF537E90,1F2EFD88D2A7DFB168E3C3C0,534C5E80ED7BD02A3D56EA82,551E3D824F5F53C74AA50313,257AF2CF0FA1178FFD21AFDD,EA91B9ECEC336C436E2D3ED2,4415112940CAA23750DC94AB,5F463724DFC33B343ED0CE81,164C2A4743B6B1985EEE045C,CC2581CAD222A7116CC479B8,); runOnlyForDeploymentPostprocessing = 0;};
+68AD63482A564744255445D8 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A42D7944434E72F925B6ABED,133DF62AB2280CBC3A2F4DF1,49E0F4B444DD39971773BFD6,4558DFD76E649AABF6538A39,4CC594B4099F087FBAA861ED,); runOnlyForDeploymentPostprocessing = 0;};
+2598EDEECA1857C47E2AB077 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (9806F1A0BFFEE106FF915C35,); runOnlyForDeploymentPostprocessing = 0;};
+/* End PBXSourcesBuildPhase section */
+/* Begin PBXTargetDependency section */
+D866B9FF1948F84200A99C44 = {isa = PBXTargetDependency; target = 4E3572EC3F7F10692B2CEE0E; targetProxy = E503D44F79C0CEE9A2EB124F;};
+FD6EEE094AFC4D970A166C62 = {isa = PBXTargetDependency; target = 4E496583F01DE0658DC70B3F; targetProxy = DF36E498C8177F5443A5C558;};
+/* End PBXTargetDependency section */
+/* Begin XCBuildConfiguration section */
+184B519F8E1416CCE38CFFD7 = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-Onone";DEBUG_INFORMATION_FORMAT = "dwarf";ENABLE_TESTABILITY = "YES";SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG";}; name = Debug;};
+A824290273A346217D9BE6F4 = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-O";DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";ENABLE_TESTABILITY = "NO";}; name = Release;};
+F8984BB85E70B1942FF09FB2 = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-Onone";DEBUG_INFORMATION_FORMAT = "dwarf";ENABLE_TESTABILITY = "YES";PRODUCT_NAME = "$(TARGET_NAME)";PRODUCT_BUNDLE_IDENTIFIER = "$(AURA_BUNDLE_ID)";INFOPLIST_FILE = "Config/App-Info.plist";CODE_SIGN_ENTITLEMENTS = "Config/App.entitlements";ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon";SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG";}; name = Debug;};
+4517BA665A1BBA8A908E010B = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-O";DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";ENABLE_TESTABILITY = "NO";PRODUCT_NAME = "$(TARGET_NAME)";PRODUCT_BUNDLE_IDENTIFIER = "$(AURA_BUNDLE_ID)";INFOPLIST_FILE = "Config/App-Info.plist";CODE_SIGN_ENTITLEMENTS = "Config/App.entitlements";ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon";}; name = Release;};
+DF5D9254D18AF922231CFC2F = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-Onone";DEBUG_INFORMATION_FORMAT = "dwarf";ENABLE_TESTABILITY = "YES";PRODUCT_NAME = "$(TARGET_NAME)";PRODUCT_BUNDLE_IDENTIFIER = "$(AURA_TUNNEL_BUNDLE_ID)";INFOPLIST_FILE = "Config/Tunnel-Info.plist";CODE_SIGN_ENTITLEMENTS = "Config/Tunnel.entitlements";APPLICATION_EXTENSION_API_ONLY = "YES";SKIP_INSTALL = "YES";SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG";}; name = Debug;};
+E2FE89CC92BE4FABD55254BC = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-O";DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";ENABLE_TESTABILITY = "NO";PRODUCT_NAME = "$(TARGET_NAME)";PRODUCT_BUNDLE_IDENTIFIER = "$(AURA_TUNNEL_BUNDLE_ID)";INFOPLIST_FILE = "Config/Tunnel-Info.plist";CODE_SIGN_ENTITLEMENTS = "Config/Tunnel.entitlements";APPLICATION_EXTENSION_API_ONLY = "YES";SKIP_INSTALL = "YES";}; name = Release;};
+78644C6020DE583008C20CDD = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-Onone";DEBUG_INFORMATION_FORMAT = "dwarf";ENABLE_TESTABILITY = "YES";PRODUCT_NAME = "$(TARGET_NAME)";PRODUCT_BUNDLE_IDENTIFIER = "$(AURA_BUNDLE_ID).tests";GENERATE_INFOPLIST_FILE = "YES";TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aura.app/Aura";BUNDLE_LOADER = "$(TEST_HOST)";SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG";}; name = Debug;};
+33A553690D2F7863C6AD4160 = {isa = XCBuildConfiguration; buildSettings = {SWIFT_VERSION = "5.0";IPHONEOS_DEPLOYMENT_TARGET = "17.0";SDKROOT = "iphoneos";TARGETED_DEVICE_FAMILY = "1,2";CODE_SIGN_STYLE = "Automatic";DEVELOPMENT_TEAM = "";CURRENT_PROJECT_VERSION = "1";MARKETING_VERSION = "0.1.0";AURA_BUNDLE_ID = "app.aura.proxy";AURA_TUNNEL_BUNDLE_ID = "$(AURA_BUNDLE_ID).tunnel";AURA_APP_GROUP = "group.$(AURA_BUNDLE_ID)";CLANG_ENABLE_MODULES = "YES";ENABLE_USER_SCRIPT_SANDBOXING = "YES";SWIFT_OPTIMIZATION_LEVEL = "-O";DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";ENABLE_TESTABILITY = "NO";PRODUCT_NAME = "$(TARGET_NAME)";PRODUCT_BUNDLE_IDENTIFIER = "$(AURA_BUNDLE_ID).tests";GENERATE_INFOPLIST_FILE = "YES";TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aura.app/Aura";BUNDLE_LOADER = "$(TEST_HOST)";}; name = Release;};
+/* End XCBuildConfiguration section */
+/* Begin XCConfigurationList section */
+1922B098E983995960BE56B0 = {isa = XCConfigurationList; buildConfigurations = (184B519F8E1416CCE38CFFD7,A824290273A346217D9BE6F4,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+73DAA91C8C3923FBD9E7A43F = {isa = XCConfigurationList; buildConfigurations = (F8984BB85E70B1942FF09FB2,4517BA665A1BBA8A908E010B,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+9DC943C57F8A26024E8BE1A1 = {isa = XCConfigurationList; buildConfigurations = (DF5D9254D18AF922231CFC2F,E2FE89CC92BE4FABD55254BC,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+BB2844EB3492B1069418ED71 = {isa = XCConfigurationList; buildConfigurations = (78644C6020DE583008C20CDD,33A553690D2F7863C6AD4160,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+/* End XCConfigurationList section */
+}; rootObject = 244210E48437B6556980A702;}

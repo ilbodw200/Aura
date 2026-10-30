@@ -1,0 +1,6 @@
+include: project.yml
+targets:
+  AuraTunnel:
+    dependencies:
+      - framework: Vendor/Libbox.xcframework
+        embed: false
