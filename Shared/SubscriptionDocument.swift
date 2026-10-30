@@ -11,7 +11,7 @@ enum SubscriptionDocument {
         var text = input.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\u{feff}", with: "")
         if !text.contains("://"), !text.hasPrefix("{"), !text.hasPrefix("["), let bytes = ProfileParser.decodeBase64(text.filter { !$0.isWhitespace }), let decoded = String(data: bytes, encoding: .utf8) { text = decoded.trimmingCharacters(in: .whitespacesAndNewlines) }
         if text.lowercased().hasPrefix("<!doctype") || text.lowercased().hasPrefix("<html") {
-            throw AuraError.message("Загрузка выполнена, но сервер вернул HTML-страницу вместо серверов. Он может выбирать формат по клиенту или показывать страницу защиты. Ссылка сохранена; нужен ответ со списком конфигураций.")
+            throw AuraError.message("Загрузка выполнена, но сервер вернул HTML-страницу вместо серверов. Он может выбирать формат по клиенту или показывать страницу защиты. Нужен ответ со списком конфигураций.")
         }
         if text.hasPrefix("{") || text.hasPrefix("[") { return try parseJSON(text) }
         if text.hasPrefix("proxies:") || text.contains("\nproxies:") { throw AuraError.message("Сервер вернул Clash YAML. Для этой версии AURA нужен список ссылок либо Xray/sing-box JSON.") }

@@ -35,7 +35,7 @@ enum SubscriptionService {
         if let error = error as? AuraError { return error.localizedDescription }
         if let error = error as? URLError {
             switch error.code {
-            case .timedOut: return "Сервер подписки не ответил вовремя. Ссылка сохранена; повторите обновление позже."
+            case .timedOut: return "Сервер подписки не ответил вовремя. Повторите загрузку позже."
             case .notConnectedToInternet, .networkConnectionLost: return "Нет подключения к сети или соединение оборвалось."
             case .cannotFindHost, .dnsLookupFailed: return "Не удалось разрешить DNS-имя сервера подписки."
             case .serverCertificateUntrusted, .serverCertificateHasBadDate, .serverCertificateHasUnknownRoot, .serverCertificateNotYetValid, .secureConnectionFailed: return "iOS не приняла TLS-сертификат или не смогла установить защищённое соединение. Проверка сертификата не отключена."
