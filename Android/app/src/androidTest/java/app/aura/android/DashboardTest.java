@@ -37,8 +37,8 @@ public class DashboardTest {
             AccessibilityNodeInfo grid=node(null,"android.widget.GridView");assertNotNull(grid);
             for(int i=0;i<30&&find(instrumentation.getUiAutomation().getRootInActiveWindow(),"Сервер 57,",null)==null;i++){assertTrue(grid.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD));idle();grid=node(null,"android.widget.GridView");}
             assertNotNull("The final server is reachable by scrolling",node("Сервер 57,",null));capture("Aura-Minimal-Servers.png");
-            AccessibilityNodeInfo search=node("Поиск серверов",null);assertNotNull(search);Bundle text=new Bundle();text.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"Сервер 57");assertTrue(search.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,text));instrumentation.waitForIdleSync();
-            AccessibilityNodeInfo last=node("Сервер 57,",null);assertNotNull(last);assertTrue(last.performAction(AccessibilityNodeInfo.ACTION_CLICK));instrumentation.waitForIdleSync();
+            AccessibilityNodeInfo search=node("Поиск серверов",null);assertNotNull(search);Bundle text=new Bundle();text.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"Сервер 57");assertTrue(search.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,text));idle();
+            AccessibilityNodeInfo last=node("Сервер 57,",null);assertNotNull(last);assertTrue("A server tile must support accessibility click",last.performAction(AccessibilityNodeInfo.ACTION_CLICK));idle();
             assertEquals(lastId,vault.load().getString("selected"));assertNotNull(node("Открыть серверы",null));assertNotNull(node("Подключить VPN",null));capture("Aura-Minimal-Selected.png");
         }finally{if(activity!=null){MainActivity current=activity;instrumentation.runOnMainSync(current::finish);}vault.save(previous);}
     }
