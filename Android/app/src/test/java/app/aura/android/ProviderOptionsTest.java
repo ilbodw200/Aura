@@ -10,9 +10,22 @@ public class ProviderOptionsTest {
             JSONObject profile=Core.link(link),state=Core.defaults();state.getJSONArray("profiles").put(profile);state.put("selected",profile.getString("id"));
             JSONObject outbound=new JSONObject(Core.config(state)).getJSONArray("outbounds").getJSONObject(0);
             if(profile.getString("type").equals("vless")&&profile.getJSONObject("query").has("fm"))assertEquals(10,outbound.getJSONObject("aura_tls_fragment").getInt("length_min"));
-            if(!profile.getJSONObject("query").optString("authority").isEmpty())assertEquals("front.example.com",outbound.getJSONObject("transport").getString("authority"));
+            if(profile.getJSONObject("query").optString("type").equals("grpc")&&!profile.getJSONObject("query").optString("authority").isEmpty())assertEquals("front.example.com",outbound.getJSONObject("transport").getString("authority"));
         }
         assertEquals(ProviderFixtures.links().length,Core.parse(String.join("\n",ProviderFixtures.links())).size());
+    }
+    @Test public void grpcDefaultsDoNotTurnOtherTransportsIntoGrpc()throws Exception{
+        String base="vless://11111111-2222-4333-8444-555555555555@server.example.com:443?security=tls";
+        for(String transport:new String[]{"tcp","raw","ws","TCP"}){
+            JSONObject p=Core.link(base+"&type="+transport+"&mode=gun&authority=front.example.com");
+            JSONObject state=Core.defaults();state.getJSONArray("profiles").put(p);state.put("selected",p.getString("id"));JSONObject out=new JSONObject(Core.config(state)).getJSONArray("outbounds").getJSONObject(0);
+            assertEquals("gun",p.getJSONObject("query").getString("mode"));
+            if(transport.equals("ws")){assertEquals("ws",out.getJSONObject("transport").getString("type"));assertFalse(out.getJSONObject("transport").has("authority"));}
+            else assertFalse("A TCP server must remain TCP",out.has("transport"));
+        }
+        String[] lines=new String[57];java.util.Arrays.fill(lines,base+"&type=tcp");lines[13]+="&mode=gun";assertEquals(57,Core.parse(String.join("\n",lines)).size());
+        Core.link(base+"&type=GRPC&serviceName=TunService&mode=Gun");
+        assertThrows(Exception.class,()->Core.link(base+"&type=grpc&mode=multi"));
     }
     @Test public void unsafeOrUnknownMasksAreRejected()throws Exception {
         String base="vless://11111111-2222-4333-8444-555555555555@example.com:443?security=tls&fm=";

@@ -5,8 +5,13 @@ import java.util.*;
 final class ProviderOptions {
     static JSONObject fragment(JSONObject p)throws Exception {
         JSONObject q=p.getJSONObject("query");String type=p.getString("type");
-        if(!q.optString("mode").isEmpty()&&(!q.optString("type").equals("grpc")||!q.optString("mode").equals("gun")))throw new Exception("Поддерживается gRPC mode=gun; режим не был заменён.");
-        String authority=q.optString("authority");if(!authority.isEmpty()&&(!q.optString("type").equals("grpc")||authority.length()>253||authority.matches(".*[\\s/@].*")))throw new Exception("Некорректный gRPC authority.");
+        // URI exporters may attach gRPC defaults to every transport. They have
+        // no effect on TCP/WS/Hysteria2; preserve them without changing transport.
+        if(q.optString("type","tcp").equals("grpc")){
+            String mode=q.optString("mode").trim().toLowerCase(Locale.ROOT);
+            if(!mode.isEmpty()&&!mode.equals("gun"))throw new Exception("Этот режим gRPC пока не поддерживается: нужен mode=gun. Транспорт не был заменён.");
+            String authority=q.optString("authority");if(!authority.isEmpty()&&(authority.length()>253||authority.matches(".*[\\s/@].*")))throw new Exception("Некорректный gRPC authority.");
+        }
         String raw=q.optString("fm");if(raw.isEmpty())return null;if(raw.length()>8192)throw new Exception("fm слишком большой.");
         JSONObject mask;try{mask=new JSONObject(raw);}catch(JSONException error){throw new Exception("fm должен содержать JSON FinalMask.");}
         if(mask.length()==0)return null;

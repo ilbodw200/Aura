@@ -64,6 +64,7 @@ public final class Core {
         }
         if(host!=null&&host.startsWith("["))host=host.substring(1,host.length()-1);
         if(name.isEmpty())name=host;
+        if(q.has("type"))q.put("type",q.optString("type").trim().toLowerCase(Locale.ROOT));
         if(q.optString("type").equals("raw"))q.put("type","tcp");
         p=obj("id",UUID.randomUUID().toString(),"name",name,"type",type,"host",host,"port",port,"credential",credential,"username",username,"method",method,"query",q,"favorite",false,"source",raw);
         validate(p); return p;
