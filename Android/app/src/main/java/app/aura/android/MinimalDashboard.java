@@ -21,6 +21,7 @@ final class MinimalDashboard {
     private final JSONObject state;
     private final Actions actions;
     private final String group;
+    private final JSONObject selected;
     final TextView timer;
     final LinearLayout view;
     private final boolean motion;
@@ -46,7 +47,7 @@ final class MinimalDashboard {
         ui.space(centre,24);TextView statusLabel=ui.title(status,22);statusLabel.setGravity(Gravity.CENTER);statusLabel.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);ui.add(centre,statusLabel);
         timer=ui.text(active?"":"Нажмите для подключения",13,ui.muted);timer.setGravity(Gravity.CENTER);ui.space(centre,8);ui.add(centre,timer);
         view.addView(centre,new LinearLayout.LayoutParams(-1,0,1));
-        JSONObject selected=Core.selected(state);
+        selected=Core.selected(state);
         View server=selected==null?chip("＋ Добавить подключение",actions::add):serverTile(selected,false,()->showServers());
         server.setContentDescription("Открыть серверы");ui.add(view,server);
         ui.space(view,10);TextView brand=ui.text("AURA",10,ui.muted);brand.setLetterSpacing(.24f);brand.setGravity(Gravity.CENTER);ui.add(view,brand);
@@ -72,7 +73,7 @@ final class MinimalDashboard {
         View handle=new View(activity);handle.setBackground(ui.rounded(ui.alpha(ui.muted,110),0,3));LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(ui.dp(36),ui.dp(4));hp.gravity=Gravity.CENTER;hp.bottomMargin=ui.dp(12);sheet.addView(handle,hp);
         LinearLayout header=ui.line();TextView heading=ui.title("Серверы",20);header.addView(heading,new LinearLayout.LayoutParams(0,-2,1));header.addView(chip("Готово",dialog::dismiss));ui.add(sheet,header);ui.space(sheet,10);
         EditText search=ui.input("Поиск серверов","");search.setSingleLine(true);search.setContentDescription("Поиск серверов");search.setBackground(ui.rounded(ui.alpha(ui.muted,24),0,22));search.setPadding(ui.dp(16),ui.dp(10),ui.dp(16),ui.dp(10));ui.add(sheet,search);ui.space(sheet,12);
-        JSONObject selected=Core.selected(state);if(selected!=null){ui.add(sheet,serverTile(selected,false,()->{dialog.dismiss();actions.select(selected);}));ui.space(sheet,12);}
+        if(selected!=null){View current=serverTile(selected,false,()->{dialog.dismiss();actions.select(selected);});current.setOnLongClickListener(v->{dialog.dismiss();actions.options(selected);return true;});ui.add(sheet,current);ui.space(sheet,12);}
         List<JSONObject> all=profiles();TextView count=ui.text("Основные · "+all.size(),12,ui.muted);ui.add(sheet,count);ui.space(sheet,10);
         GridView grid=new GridView(activity);grid.setTag("server.grid");grid.setNumColumns(activity.getResources().getConfiguration().screenWidthDp<350||activity.getResources().getConfiguration().fontScale>1.25f?1:2);grid.setHorizontalSpacing(ui.dp(8));grid.setVerticalSpacing(ui.dp(8));grid.setClipToPadding(false);grid.setPadding(0,0,0,ui.dp(12));grid.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
         List<JSONObject> visible=new ArrayList<>(all);
