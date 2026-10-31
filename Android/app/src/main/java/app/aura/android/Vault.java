@@ -14,6 +14,7 @@ import java.security.*;
 import java.util.*;
 
 final class Vault {
+    private static final Object FILE_LOCK=new Object();
     private static final String KEY="aura.local.v1";
     private final AtomicFile file;
     Vault(Context context){file=new AtomicFile(new File(context.getNoBackupFilesDir(),"profiles.aura"));}
@@ -23,16 +24,16 @@ final class Vault {
         KeyGenerator gen=KeyGenerator.getInstance("AES","AndroidKeyStore");
         gen.init(new KeyGenParameterSpec.Builder(KEY,KeyProperties.PURPOSE_ENCRYPT|KeyProperties.PURPOSE_DECRYPT).setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setKeySize(256).build());return gen.generateKey();
     }
-    synchronized JSONObject load()throws Exception{
+    JSONObject load()throws Exception{synchronized(FILE_LOCK){
         if(!file.getBaseFile().exists())return Core.defaults();
         byte[] combined=file.readFully();Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.DECRYPT_MODE,key(),new GCMParameterSpec(128,Arrays.copyOfRange(combined,0,12)));
         JSONObject state=new JSONObject(new String(cipher.doFinal(combined,12,combined.length-12),StandardCharsets.UTF_8));Core.validateState(state);return state;
-    }
-    synchronized void save(JSONObject state)throws Exception{
+    }}
+    void save(JSONObject state)throws Exception{synchronized(FILE_LOCK){
         Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.ENCRYPT_MODE,key());
         byte[] encrypted=cipher.doFinal(state.toString().getBytes(StandardCharsets.UTF_8));FileOutputStream stream=null;
         try{stream=file.startWrite();stream.write(cipher.getIV());stream.write(encrypted);file.finishWrite(stream);}catch(Exception e){if(stream!=null)file.failWrite(stream);throw e;}
-    }
+    }}
     static List<JSONObject> fetch(String text,Map<String,String> metadata)throws Exception{return fetch(text,metadata,false);}
     static final class FetchResult {
         final List<JSONObject> profiles;final JSONObject usage;
