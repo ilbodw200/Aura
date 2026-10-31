@@ -34,7 +34,7 @@ bash Scripts/bootstrap-android-core.sh
 Android/gradlew -p Android testReleaseUnitTest assembleDebug
 ```
 
-Для release задаются `AURA_SIGNING_STORE` (PKCS12, alias `aura`) и `AURA_SIGNING_PASSWORD`. Ключ хранится в GitHub Actions Secrets. Публичная версия — 1.0; Android versionCode увеличен до 8, чтобы обновление сохранило установленные данные.
+Для release задаются `AURA_SIGNING_STORE` (PKCS12, alias `aura`) и `AURA_SIGNING_PASSWORD`. Ключ хранится в GitHub Actions Secrets. Публичная версия — 1.0; Android versionCode увеличен до 9, чтобы обновление сохранило установленные данные.
 
 [Workflow сборки](https://github.com/ilbodw200/Aura/actions/workflows/android.yml) проверяет JVM-логику, Compose, VPN-службу на эмуляторе, подпись и запуск release APK. Сценарий службы использует настоящий Android TUN и локальный тестовый SOCKS-сервер. Тестовые серверы не включаются в release APK.
 
