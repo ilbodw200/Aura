@@ -1,10 +1,14 @@
 # AURA — Android и iOS
 
-[Скачать AURA iOS 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2) · [Android 1.0.1](https://github.com/ilbodw200/Aura/releases/tag/v1.0.1).
+[Скачать AURA iOS 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2) · [Android 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2).
 
-- `AURA-Android-1.0.1.apk` — готовый подписанный APK для Android 8.0+, armeabi-v7a / arm64-v8a / x86_64.
+- `AURA-Android-1.0.2.apk` — готовый подписанный APK для Android 8.0+, armeabi-v7a / arm64-v8a / x86_64.
 - `AURA-iOS-1.0.2-unsigned.ipa` — iOS 17+, нативный Liquid Glass на iOS 26+. Подпишите приложение и расширение сертификатом, разрешающим Network Extension.
 - Контрольные суммы находятся в `SHA256SUMS` каждого релиза.
+
+## Android 1.0.2
+
+Минималистичный главный экран: выбор подписки сверху, кнопка VPN по центру и выбранный сервер снизу. Панель серверов с поиском, компактной сеткой и пингом. Короткие анимации открытия панели и нажатия; в настройках можно отключить анимации или вернуть классический экран. На iPhone оформление сохранено.
 
 ## Исправления iOS 1.0.2
 

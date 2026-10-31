@@ -41,7 +41,8 @@ final class MinimalDashboard {
         PowerBadge badge=new PowerBadge(ui,active,AuraVpnService.status.equals("connecting"));
         badge.setContentDescription(active?"Отключить VPN":"Подключить VPN");badge.setFocusable(true);
         badge.setOnClickListener(v->{if(motion){v.animate().scaleX(.94f).scaleY(.94f).setDuration(90).withEndAction(()->v.animate().scaleX(1).scaleY(1).setDuration(160).start()).start();}actions.connect();});
-        centre.addView(badge,new LinearLayout.LayoutParams(ui.dp(200),ui.dp(200)));
+        int badgeSize=activity.getResources().getConfiguration().screenHeightDp<520?120:200;
+        centre.addView(badge,new LinearLayout.LayoutParams(ui.dp(badgeSize),ui.dp(badgeSize)));
         ui.space(centre,24);TextView statusLabel=ui.title(status,22);statusLabel.setGravity(Gravity.CENTER);statusLabel.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);ui.add(centre,statusLabel);
         timer=ui.text(active?"":"Нажмите для подключения",13,ui.muted);timer.setGravity(Gravity.CENTER);ui.space(centre,8);ui.add(centre,timer);
         view.addView(centre,new LinearLayout.LayoutParams(-1,0,1));
@@ -75,7 +76,7 @@ final class MinimalDashboard {
         List<JSONObject> all=profiles();TextView count=ui.text("Основные · "+all.size(),12,ui.muted);ui.add(sheet,count);ui.space(sheet,10);
         GridView grid=new GridView(activity);grid.setTag("server.grid");grid.setNumColumns(activity.getResources().getConfiguration().screenWidthDp<350||activity.getResources().getConfiguration().fontScale>1.25f?1:2);grid.setHorizontalSpacing(ui.dp(8));grid.setVerticalSpacing(ui.dp(8));grid.setClipToPadding(false);grid.setPadding(0,0,0,ui.dp(12));grid.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
         List<JSONObject> visible=new ArrayList<>(all);
-        BaseAdapter adapter=new BaseAdapter(){public int getCount(){return visible.size();}public JSONObject getItem(int position){return visible.get(position);}public long getItemId(int position){return position;}public View getView(int position,View convert,ViewGroup parent){JSONObject p=getItem(position);return serverTile(p,true,()->{dialog.dismiss();actions.select(p);});}};
+        BaseAdapter adapter=new BaseAdapter(){public int getCount(){return visible.size();}public JSONObject getItem(int position){return visible.get(position);}public long getItemId(int position){return position;}public View getView(int position,View convert,ViewGroup parent){JSONObject p=getItem(position);View tile=serverTile(p,true,()->{dialog.dismiss();actions.select(p);});tile.setOnLongClickListener(v->{dialog.dismiss();actions.options(p);return true;});return tile;}};
         grid.setAdapter(adapter);sheet.addView(grid,new LinearLayout.LayoutParams(-1,0,1));
         TextView empty=ui.text(all.isEmpty()?"Добавьте подписку или сервер":"Ничего не найдено",14,ui.muted);empty.setGravity(Gravity.CENTER);ui.add(sheet,empty);empty.setVisibility(all.isEmpty()?View.VISIBLE:View.GONE);
         search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void afterTextChanged(Editable e){}public void onTextChanged(CharSequence s,int start,int before,int after){String q=s.toString().trim().toLowerCase(Locale.ROOT);visible.clear();for(JSONObject p:all)if((p.optString("name")+" "+protocol(p)+" "+p.optString("host")).toLowerCase(Locale.ROOT).contains(q))visible.add(p);adapter.notifyDataSetChanged();count.setText("Основные · "+visible.size());empty.setVisibility(visible.isEmpty()?View.VISIBLE:View.GONE);}});
