@@ -11,10 +11,13 @@ final class ScrollingTests: XCTestCase {
         XCTAssertTrue(list.waitForExistence(timeout: 10))
         let last = app.buttons["server.select.00000000-0000-4000-8000-000000000057"]
         for _ in 0..<24 {
-            if last.exists && last.isHittable { break }
+            // A partially exposed row can be reported as hittable while its
+            // centre is still covered by the persistent connection dock.
+            if last.exists && last.isHittable && last.frame.maxY < toggle.frame.minY { break }
             list.swipeUp()
         }
         XCTAssertTrue(last.exists && last.isHittable, "The final server must be reachable by swiping the list")
+        XCTAssertLessThan(last.frame.maxY, toggle.frame.minY, "The full server button must be above the connection dock")
         XCTAssertTrue(toggle.isHittable, "Connection remains accessible while scrolling")
         XCTAssertTrue(app.buttons["dashboard.add"].isHittable)
         last.tap()
