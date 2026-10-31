@@ -1,10 +1,14 @@
 # AURA — Android и iOS
 
-[Скачать AURA iOS 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2) · [Android 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2).
+[Скачать AURA iOS 1.0.2](https://github.com/ilbodw200/Aura/releases/tag/v1.0.2) · [Android 1.0.3](https://github.com/ilbodw200/Aura/releases/tag/v1.0.3).
 
-- `AURA-Android-1.0.2.apk` — готовый подписанный APK для Android 8.0+, armeabi-v7a / arm64-v8a / x86_64.
+- `AURA-Android-1.0.3.apk` — готовый подписанный APK для Android 8.0+, armeabi-v7a / arm64-v8a / x86_64.
 - `AURA-iOS-1.0.2-unsigned.ipa` — iOS 17+, нативный Liquid Glass на iOS 26+. Подпишите приложение и расширение сертификатом, разрешающим Network Extension.
 - Контрольные суммы находятся в `SHA256SUMS` каждого релиза.
+
+## Android 1.0.3
+
+Настройки и пинг получили единое оформление с главным экраном: карточки, выбор с галочками, акцентный слайдер и отдельная страница. Верхние значки заменены контурными иконками с областью нажатия 50×50 dp. iOS остаётся на 1.0.2.
 
 ## Android 1.0.2
 
