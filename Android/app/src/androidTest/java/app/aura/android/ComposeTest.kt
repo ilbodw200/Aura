@@ -31,7 +31,8 @@ class ComposeTest {
             activity=instrumentation.startActivitySync(Intent(context,AuraActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as AuraActivity
             compose.waitUntil(10000){compose.onAllNodesWithText("AURA VPN").fetchSemanticsNodes().isNotEmpty()}
             capture("Aura-Compose-Home.png")
-            compose.onNodeWithContentDescription("Серверы").performClick()
+            compose.onNodeWithContentDescription("Открыть серверы").performClick()
+            compose.onNodeWithText("Ваши серверы").assertIsDisplayed()
             compose.onNodeWithTag("servers.list").performScrollToNode(hasTestTag("server.$last"))
             compose.onNodeWithTag("server.$last").assertIsDisplayed()
             capture("Aura-Compose-Servers.png")
@@ -40,6 +41,11 @@ class ComposeTest {
             instrumentation.uiAutomation.waitForIdle(250,5000)
             compose.onNodeWithTag("server.$last").performClick()
             compose.waitUntil(5000){vault.load().optString("selected")==last}
+            compose.onNodeWithText("Сервер 57").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Серверы").performClick()
+            compose.onNodeWithTag("servers.search").performTextInput("Сервер 57")
+            compose.onNodeWithTag("servers.search").performImeAction()
+            instrumentation.uiAutomation.waitForIdle(250,5000)
             compose.onNodeWithContentDescription("В избранное").performClick()
             compose.waitUntil(5000){Core.find(vault.load().getJSONArray("profiles"),last).optBoolean("favorite")}
             compose.onNodeWithContentDescription("Настройки").performClick()
