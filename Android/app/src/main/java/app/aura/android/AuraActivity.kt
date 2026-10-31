@@ -29,7 +29,7 @@ class AuraActivity: ComponentActivity() {
     override fun onStop(){model.foreground=false;super.onStop()}
     private fun toggle(){
         if(waitingPermission)return
-        if(AuraVpnService.status in listOf("connected","connecting","reconnecting")){startService(Intent(this,AuraVpnService::class.java).setAction("STOP"));return}
+        if(AuraVpnService.status in listOf("connected","connecting","reconnecting")||model.state.value.status=="connecting"){startService(Intent(this,AuraVpnService::class.java).setAction("STOP"));return}
         if(AuraVpnService.status=="disconnecting"||!model.canConnect())return
         val request=VpnService.prepare(this)
         if(request!=null){waitingPermission=true;consent.launch(request)}else startTunnel(false)
@@ -37,8 +37,9 @@ class AuraActivity: ComponentActivity() {
     private fun startTunnel(restart:Boolean){
         try {
             if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+            model.pendingConnection()
             ContextCompat.startForegroundService(this,Intent(this,AuraVpnService::class.java).setAction(if(restart)"RESTART" else "START"))
-        }catch(_:Exception){model.message("Android не разрешил запустить VPN. Повторите с открытым приложением.")}
+        }catch(_:Exception){model.refresh();model.message("Android не разрешил запустить VPN. Повторите с открытым приложением.")}
     }
     private fun openLegacy(action:String){
         lifecycleScope.launch { model.appearance(model.state.value.appearance).join();startActivity(Intent(this@AuraActivity,MainActivity::class.java).putExtra("aura.action",action)) }

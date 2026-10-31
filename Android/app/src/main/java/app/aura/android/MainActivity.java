@@ -29,14 +29,14 @@ public final class MainActivity extends Activity {
     private final SharedPreferences.OnSharedPreferenceChangeListener runtimeListener=(p,key)->{if(key.equals("revision"))runOnUiThread(()->{render();if(!AuraVpnService.lastError.isEmpty()){String error=AuraVpnService.lastError;AuraVpnService.lastError="";message(error);}});};
     interface Action {void run()throws Exception;}
     private void safe(Action action){try{action.run();}catch(Exception e){if(body!=null)render();message(e.getMessage()==null?"Не удалось выполнить действие.":e.getMessage());}}
-    private boolean active(){return !AuraVpnService.status.equals("disconnected");}
+    private boolean active(){return Arrays.asList("connecting","connected","reconnecting","disconnecting").contains(AuraVpnService.status);}
     private void requireOff()throws Exception{if(active())throw new Exception("Сначала отключите VPN, чтобы изменить конфигурацию.");}
     private void save()throws Exception{if(!storageReady)throw new Exception("Хранилище недоступно; существующие данные не перезаписаны.");vault.save(state);}
     @Override public void onCreate(Bundle saved){super.onCreate(saved);vault=new Vault(this);try{state=vault.load();storageReady=true;}catch(Exception e){try{state=Core.defaults();}catch(Exception ignored){}message("Не удалось открыть хранилище. Существующие данные сохранены без изменений.");}
         if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::navigateBack);
         getSharedPreferences("runtime",MODE_PRIVATE).registerOnSharedPreferenceChangeListener(runtimeListener);
-        String external=getIntent().getStringExtra("aura.action");if(external!=null){tab=external.equals("profiles")||external.equals("import")||external.equals("qr")?1:external.equals("rules")?2:4;}
-        render();handler.post(tick);if(external!=null)handler.post(()->safe(()->{switch(external){case "import":importDialog("");break;case "qr":scan();break;case "split":splitPicker();break;}}));
+        String external=getIntent().getStringExtra("aura.action");if(external==null){external="profiles";getIntent().putExtra("aura.action",external);}final String action=external;if(external!=null){tab=external.equals("profiles")||external.equals("import")||external.equals("qr")?1:external.equals("rules")?2:4;}
+        render();handler.post(tick);if(external!=null)handler.post(()->safe(()->{switch(action){case "import":importDialog("");break;case "qr":scan();break;case "split":splitPicker();break;}}));
     }
     private void navigateBack(){if(getIntent().hasExtra("aura.action")){finish();return;}if(tab!=0){tab=0;render();}else finish();}
     @Override public void onBackPressed(){navigateBack();}
@@ -50,34 +50,16 @@ public final class MainActivity extends Activity {
         root.setBackground(state.optString("backdrop").equals("minimal")?ui.rounded(ui.bg,0,0):new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{ui.light?0xffd9f0e7:0xff0b2c2c,ui.bg,ui.light?0xffe7e5f4:second}));
         getWindow().setStatusBarColor(ui.bg);getWindow().setNavigationBarColor(ui.bg);getWindow().getDecorView().setSystemUiVisibility(ui.light?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR:0);
         root.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets.consumeSystemWindowInsets();});
-        if(tab==0&&!state.optBoolean("classicHome")){
-            body=root;
-            try{
-                if(!homeGroup.isEmpty()&&Core.find(state.getJSONArray("subscriptions"),homeGroup)==null)homeGroup="";
-                MinimalDashboard dashboard=new MinimalDashboard(this,ui,state,homeGroup,statusTitle(),active(),new MinimalDashboard.Actions(){
-                    public void connect(){safe(MainActivity.this::toggleVPN);}
-                    public void subscriptions(){safe(MainActivity.this::homeSubscriptions);}
-                    public void tools(){homeTools();}
-                    public void ping(){safe(MainActivity.this::pingSettings);}
-                    public void add(){importDialog("");}
-                    public void select(JSONObject profile){safe(()->MainActivity.this.select(profile));}
-                    public void options(JSONObject profile){profileMenu(profile);}
-                    public void measure(List<JSONObject> profiles){safe(()->measureGroup(profiles));}
-                });
-                timerText=dashboard.timer;root.addView(dashboard.view,new LinearLayout.LayoutParams(-1,0,1));
-            }catch(Exception e){ui.add(root,button("Открыть подключения",()->{tab=1;render();}));}
-            setContentView(root);root.requestApplyInsets();return;
-        }
         if(tab==4){
-            root.setBackgroundColor(ui.bg);LinearLayout header=ui.line();header.setPadding(ui.dp(16),ui.dp(10),ui.dp(16),ui.dp(10));header.addView(ui.iconButton("back","На главный экран",()->{tab=0;render();}),new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));TextView title=ui.title("Настройки",22);title.setPadding(ui.dp(14),0,0,0);header.addView(title);ui.add(root,header);
-            ScrollView settingsScroll=new ScrollView(this);body=ui.column();body.setPadding(ui.dp(18),0,ui.dp(18),ui.dp(24));settingsScroll.addView(body);root.addView(settingsScroll,new LinearLayout.LayoutParams(-1,0,1));try{settings();}catch(Exception e){ui.add(body,ui.text("Не удалось открыть настройки",14,ui.muted));}setContentView(root);root.requestApplyInsets();return;
+            root.setBackgroundColor(ui.bg);LinearLayout header=ui.line();header.setPadding(ui.dp(16),ui.dp(10),ui.dp(16),ui.dp(10));header.addView(ui.iconButton("back","На главный экран",this::navigateBack),new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));String page=getIntent().getStringExtra("aura.action");TextView title=ui.title("backup".equals(page)?"Резервные копии":"split".equals(page)?"Приложения VPN":"О приложении",22);title.setPadding(ui.dp(14),0,0,0);header.addView(title);ui.add(root,header);
+            ScrollView settingsScroll=new ScrollView(this);body=ui.column();body.setPadding(ui.dp(18),0,ui.dp(18),ui.dp(24));settingsScroll.addView(body);root.addView(settingsScroll,new LinearLayout.LayoutParams(-1,0,1));try{legacySettings();}catch(Exception e){ui.add(body,ui.text("Не удалось открыть настройки",14,ui.muted));}setContentView(root);root.requestApplyInsets();return;
         }
         ScrollView scroll=new ScrollView(this);scroll.setClipToPadding(false);body=ui.column();body.setPadding(ui.dp(22),ui.dp(18),ui.dp(22),ui.dp(24));scroll.addView(body);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-        LinearLayout brand=ui.line();TextView logo=ui.title("AURA",18);logo.setLetterSpacing(.15f);brand.addView(logo,new LinearLayout.LayoutParams(0,-2,1));brand.addView(ui.button("QR",this::scan),new LinearLayout.LayoutParams(ui.dp(52),ui.dp(46)));ui.add(body,brand);ui.space(body,24);
-        try{switch(tab){case 0:home();break;case 1:profiles();break;case 2:rules();break;case 3:studio();break;default:settings();}}catch(Exception e){ui.add(body,ui.text("Не удалось отобразить данные. Откройте настройки и проверьте резервную копию.",14,ui.muted));}
+        LinearLayout brand=ui.line();brand.addView(ui.iconButton("back","На главный экран",this::navigateBack),new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));TextView logo=ui.title(tab==2?"Правила":"Подключения",18);logo.setLetterSpacing(.15f);brand.addView(logo,new LinearLayout.LayoutParams(0,-2,1));brand.addView(ui.button("QR",this::scan),new LinearLayout.LayoutParams(ui.dp(52),ui.dp(46)));ui.add(body,brand);ui.space(body,24);
+        try{switch(tab){case 0:home();break;case 1:profiles();break;case 2:rules();break;case 3:studio();break;default:legacySettings();}}catch(Exception e){ui.add(body,ui.text("Не удалось отобразить данные. Откройте настройки и проверьте резервную копию.",14,ui.muted));}
         LinearLayout nav=ui.line();nav.setPadding(ui.dp(5),ui.dp(9),ui.dp(5),ui.dp(9));nav.setBackground(ui.rounded(ui.light?0xeaffffff:0xcc10222d,0,24));String[] names={"Обзор","Серверы","Правила","Студия","Ещё"},icons={"◉","▤","⑂","◈","⚙"};
         for(int i=0;i<5;i++){final int index=i;TextView b=ui.text(icons[i]+"\n"+names[i],12,i==tab?ui.accent:ui.muted);b.setGravity(Gravity.CENTER);b.setMinHeight(ui.dp(54));b.setContentDescription(names[i]);b.setFocusable(true);if(i==tab)b.setBackground(ui.rounded(ui.alpha(ui.accent,20),0,18));b.setOnClickListener(v->{tab=index;render();});nav.addView(b,new LinearLayout.LayoutParams(0,-2,1));}
-        LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,-2);np.setMargins(ui.dp(12),0,ui.dp(12),ui.dp(8));root.addView(nav,np);setContentView(root);root.requestApplyInsets();
+        LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,-2);np.setMargins(ui.dp(12),0,ui.dp(12),ui.dp(8));if(!getIntent().hasExtra("aura.action"))root.addView(nav,np);setContentView(root);root.requestApplyInsets();
     }
     private TextView button(String title,Action action){return ui.button(title,()->safe(action));}
     private void homeTools(){tab=4;render();}
@@ -273,19 +255,11 @@ public final class MainActivity extends Activity {
     }
     private String widgetTitle(String key){return key.equals("server")?"Группы серверов":key.equals("routing")?"Маршрутизация":"Избранное";}
     private void choose(String title,String[] labels,String[] values,String key){new AlertDialog.Builder(this).setTitle(title).setItems(labels,(d,i)->safe(()->{state.put(key,values[i]);save();render();})).show();}
-    private void settings()throws Exception{
-        SettingsUi design=new SettingsUi(ui);
-        LinearLayout quick=design.group(body,"ПОДКЛЮЧЕНИЯ");
-        design.row(quick,"server","Серверы и подписки","Обновление, HWID провайдера и управление",null,()->{tab=1;render();});design.divider(quick);
-        design.row(quick,"add","Добавить подключение",null,null,()->importDialog(""));design.divider(quick);design.row(quick,"qr","Сканировать QR-код",null,null,this::scan);
-        LinearLayout network=design.group(body,"СЕТЬ");design.row(network,"ping","Настройки пинга","Протокол, режим и таймаут",Ping.settings(state).getString("method"),()->safe(this::pingSettings));design.divider(network);design.row(network,"route","Маршрутизация",null,modeTitle(),()->{tab=2;render();});design.divider(network);design.row(network,"shield","Приложения без VPN",null,null,()->safe(this::excludedApps));design.divider(network);
-        String dns=state.optString("dns");String dnsTitle=dns.contains("1.1.1.1")?"Cloudflare":dns.contains("8.8.8.8")?"Google":"Quad9";
-        design.row(network,"server","DNS через туннель",null,dnsTitle,()->safe(()->{requireOff();choose("DNS",new String[]{"Cloudflare · DoH","Google · DoH","Quad9 · DoH"},new String[]{"https://1.1.1.1/dns-query","https://8.8.8.8/dns-query","https://9.9.9.9/dns-query"},"dns");}));
-        LinearLayout appearance=design.group(body,"ИНТЕРФЕЙС");design.row(appearance,"palette","Оформление","Тема, акцент и фон",null,()->{tab=3;render();});design.divider(appearance);design.toggle(appearance,"Минимум анимаций",state.optBoolean("reduceMotion"),v->safe(()->{state.put("reduceMotion",v);save();}));design.divider(appearance);design.toggle(appearance,"Классический главный экран",state.optBoolean("classicHome"),v->safe(()->{state.put("classicHome",v);save();}));
-        LinearLayout privacy=design.group(body,"КОНФИДЕНЦИАЛЬНОСТЬ");design.toggle(privacy,"Скрывать в переключателе",state.optBoolean("hideRecents",true),v->safe(()->{state.put("hideRecents",v);save();render();}));design.divider(privacy);design.toggle(privacy,"HWID для новых подписок",state.optBoolean("sendHWID"),v->safe(()->{state.put("sendHWID",v);save();}));design.divider(privacy);
-        design.row(privacy,"copy","Скопировать HWID",DeviceInfo.hwid(this),null,()->{getSystemService(android.content.ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("HWID AURA",DeviceInfo.hwid(this)));Toast.makeText(this,"HWID скопирован",Toast.LENGTH_SHORT).show();});design.note(body,"HWID — идентификатор установки AURA. Отправляется только провайдеру подписки, для которой включена отправка.");
-        LinearLayout tools=design.group(body,"ДАННЫЕ И ПОДДЕРЖКА");design.row(tools,"ping","Диагностика",null,null,()->safe(this::diagnostics));design.divider(tools);design.row(tools,"copy","Создать резервную копию",null,null,this::exportBackup);design.divider(tools);design.row(tools,"document","Восстановить копию",null,null,()->safe(this::restoreBackup));design.divider(tools);design.row(tools,"document","Исходники и лицензия","GPL-3.0-or-later",null,()->startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://github.com/ilbodw200/Aura"))));
-        TextView version=ui.text("AURA Android · "+BuildConfig.VERSION_NAME+"\nsing-box 1.11.15",12,ui.muted);version.setGravity(Gravity.CENTER);version.setLineSpacing(ui.dp(5),1);version.setPadding(0,ui.dp(16),0,ui.dp(12));ui.add(body,version);
+    private void legacySettings()throws Exception{
+        SettingsUi design=new SettingsUi(ui);String action=getIntent().getStringExtra("aura.action");
+        if("backup".equals(action)){LinearLayout data=design.group(body,"ЗАШИФРОВАННЫЕ КОПИИ");design.row(data,"copy","Создать резервную копию","AES-256-GCM · пароль от 12 символов",null,this::exportBackup);design.divider(data);design.row(data,"document","Восстановить копию","Заменяет данные только после подтверждения",null,()->safe(this::restoreBackup));design.note(body,"Копии Android и iOS имеют разные форматы. Пароль копии не сохраняется.");return;}
+        if("split".equals(action)){LinearLayout apps=design.group(body,"SPLIT TUNNELING");design.row(apps,"shield","Выбрать приложения",state.optString("splitMode","exclude").equals("include")?"Только выбранные через VPN":"Все, кроме исключённых",null,()->safe(this::splitPicker));design.note(body,"Изменения доступны при отключённом VPN. Служебные сокеты ядра защищены от захвата собственным туннелем.");return;}
+        LinearLayout about=design.group(body,"AURA VPN "+BuildConfig.VERSION_NAME);design.row(about,"shield","Защита конфигураций","Android Keystore · AES-256-GCM",null,null);design.divider(about);design.row(about,"server","Движок","sing-box 1.11.15 · VLESS, VMess, Trojan, Shadowsocks, SOCKS5, Hysteria2",null,null);design.divider(about);design.row(about,"document","Исходники и лицензия","GPL-3.0-or-later",null,()->startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://github.com/ilbodw200/Aura"))));design.note(body,"Без рекламы и аналитики. Серверы добавляются из ваших конфигураций и подписок.");
     }
     private void splitPicker()throws Exception{requireOff();new AlertDialog.Builder(this).setTitle("Split Tunneling").setItems(new String[]{"Все, кроме выбранных","Только выбранные"},(d,i)->safe(()->{excludedApps(i==1);})).setNegativeButton("Отмена",null).show();}
     private void excludedApps()throws Exception{excludedApps(state.optString("splitMode","exclude").equals("include"));}

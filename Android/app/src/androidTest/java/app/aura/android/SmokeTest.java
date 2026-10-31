@@ -24,5 +24,5 @@ import static org.junit.Assert.*;
         for(String link:links){JSONObject p=Core.link(link),state=Core.defaults();state.getJSONArray("profiles").put(p);state.put("selected",p.getString("id"));Libbox.checkConfig(Core.config(state));}
         assertFalse(Libbox.version().isEmpty());
     }
-    @Test public void activityStarts(){android.app.Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();MainActivity activity=(MainActivity)instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));assertFalse(activity.isFinishing());instrumentation.runOnMainSync(activity::finish);}
+    @Test public void activityStarts(){android.app.Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();AuraActivity activity=(AuraActivity)instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),AuraActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));assertFalse(activity.isFinishing());instrumentation.runOnMainSync(activity::finish);}
 }

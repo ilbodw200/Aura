@@ -24,6 +24,7 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
     private final ExecutorService probes=Executors.newSingleThreadExecutor();
     private final java.util.concurrent.atomic.AtomicLong generation=new java.util.concurrent.atomic.AtomicLong();
     private volatile boolean desired;
+    private final java.util.concurrent.atomic.AtomicBoolean ipChecking=new java.util.concurrent.atomic.AtomicBoolean();
     private BoxService box;
     private CommandServer commandServer;
     private CommandClient commandClient;
@@ -72,7 +73,7 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
             public void writeStatus(StatusMessage message){if(token!=generation.get()||current!=AuraVpnService.this)return;metricsAvailable=message.getTrafficAvailable();rxTotal=message.getDownlinkTotal();txTotal=message.getUplinkTotal();rxRate=Math.max(0,message.getDownlink());txRate=Math.max(0,message.getUplink());}
         },options);commandClient.connect();
     }catch(Exception e){metricsAvailable=false;event("Счётчики ядра временно недоступны");}}
-    public static void checkPublicIP(){AuraVpnService service=current;if(service==null||!status.equals("connected"))return;long token=service.generation.get();TunnelHttp.Endpoint target=service.endpoint;service.probes.execute(()->{try{String ip=TunnelHttp.publicIP(target);if(token==service.generation.get()&&service.desired){publicIP=ip;event("IP через выбранный прокси проверен");}}catch(Exception e){if(token==service.generation.get())event("Проверка IP недоступна; прямой запрос не выполнялся");}});}
+    public static void checkPublicIP(){AuraVpnService service=current;if(service==null||!status.equals("connected")||!service.ipChecking.compareAndSet(false,true))return;long token=service.generation.get();TunnelHttp.Endpoint target=service.endpoint;try{service.probes.execute(()->{try{if(token!=service.generation.get())return;String ip=TunnelHttp.publicIP(target);if(token==service.generation.get()&&service.desired){publicIP=ip;event("IP через выбранный прокси проверен");}}catch(Exception e){if(token==service.generation.get())event("Проверка IP недоступна; прямой запрос не выполнялся");}finally{service.ipChecking.set(false);}});}catch(RejectedExecutionException e){service.ipChecking.set(false);}}
     private void closeCore(){metricsAvailable=false;endpoint=null;if(commandClient!=null){try{commandClient.disconnect();}catch(Exception ignored){}commandClient=null;}if(commandServer!=null){try{commandServer.close();}catch(Exception ignored){}commandServer=null;}if(box!=null){try{box.close();}catch(Exception ignored){}box=null;}if(tunnel!=null){try{tunnel.close();}catch(Exception ignored){}tunnel=null;}try{closeDefaultInterfaceMonitor(listener);}catch(Exception ignored){}rxRate=txRate=0;}
     private void stopRequested(){onStartCommand(new Intent(this,AuraVpnService.class).setAction("STOP"),0,0);}
     @Override public void onRevoke(){event("Системное разрешение VPN отозвано");stopRequested();}

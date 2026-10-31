@@ -56,11 +56,12 @@ class AuraViewModel(app: Application): AndroidViewModel(app) {
         if(!state.value.loaded) { message("Дождитесь открытия хранилища");return@launch }
         try { val next=repository.change(block);mutable.update { it.copy(raw=next) };done() } catch(_:Exception) { message("Не удалось сохранить изменения. Проверьте данные и состояние VPN.") }
     }
-    fun setting(key: String, value: Any) { if(state.value.running && key in listOf("mtu","blockIPv6","dns","splitMode","autoReconnect")) { message("Сначала отключите VPN");return }; update({ it.put(key,value) }) }
+    fun pendingConnection(){mutable.update{it.copy(status="connecting")}}
+    fun setting(key: String, value: Any) { if((state.value.running||AuraVpnService.status in listOf("connecting","connected","reconnecting","disconnecting")) && key in listOf("mtu","blockIPv6","dns","splitMode","autoReconnect")) { message("Сначала отключите VPN");return }; update({ it.put(key,value) }) }
     fun appearance(value: AuraAppearance) = viewModelScope.launch { try { repository.appearance(value);if(state.value.loaded) { val next=repository.change { it.put("theme",if(value.dark)"dark" else "light").put("accent",if(value.accent=="blue")"blue" else "violet").put("backdrop","minimal").put("reduceMotion",!value.effects) };mutable.update { it.copy(raw=next) } } } catch(_:Exception) { message("Оформление не сохранено") } }
     fun select(id: String, selected: (Boolean)->Unit) {
-        if(state.value.transition) { message("Дождитесь завершения подключения");return }
-        val restart=state.value.status=="connected"
+        if(state.value.transition||AuraVpnService.status in listOf("connecting","disconnecting","reconnecting")) { message("Дождитесь завершения подключения");return }
+        val restart=AuraVpnService.status=="connected"
         update({ if(Core.find(it.getJSONArray("profiles"),id)==null) error("Missing profile");it.put("selected",id) }, {selected(restart)})
     }
     fun favorite(id:String) { update({ val p=Core.find(it.getJSONArray("profiles"),id) ?: error("Missing profile");p.put("favorite",!p.optBoolean("favorite")) }) }

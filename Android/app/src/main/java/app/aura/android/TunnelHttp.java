@@ -20,7 +20,7 @@ final class TunnelHttp {
             try(SSLSocket tls=(SSLSocket)((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(socket,host,443,true)){
                 SSLParameters parameters=tls.getSSLParameters();parameters.setEndpointIdentificationAlgorithm("HTTPS");tls.setSSLParameters(parameters);tls.setSoTimeout(10000);tls.startHandshake();
                 tls.getOutputStream().write(("GET / HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: AURA/1.0\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));tls.getOutputStream().flush();
-                String ip=body(tls.getInputStream()).trim();if(!ip.matches("[0-9a-fA-F:.]{3,45}"))throw new IOException("Invalid IP response");return InetAddress.getByName(ip).getHostAddress();
+                String ip=body(tls.getInputStream()).trim();if(!ip.matches("[0-9a-fA-F:.]{3,45}")||(!ip.contains(":")&&!ip.matches("(?:[0-9]{1,3}\\.){3}[0-9]{1,3}")))throw new IOException("Invalid IP response");return InetAddress.getByName(ip).getHostAddress();
             }
         }
     }
