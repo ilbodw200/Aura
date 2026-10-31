@@ -120,6 +120,7 @@ public final class Core {
             out.put("transport",t);
         }
         if(type.equals("hysteria2")&&q.has("obfs")){if(!q.getString("obfs").equals("salamander")||q.optString("obfs-password").isEmpty())throw new Exception("Для Hysteria2 поддерживается salamander с паролем.");out.put("obfs",obj("type","salamander","password",q.getString("obfs-password")));}
+        if(state.optString("splitMode","exclude").equals("include")&&(state.optJSONArray("includedApps")==null||state.getJSONArray("includedApps").length()==0))throw new Exception("Выберите приложения для VPN.");
         int mtu=state.optInt("mtu",1400);if(mtu<1280||mtu>9000)throw new Exception("MTU: от 1280 до 9000.");
         JSONArray rules=array(obj("protocol","dns","action","hijack-dns"));
         if(state.optBoolean("blockIPv6",true))rules.put(obj("ip_version",6,"action","reject"));

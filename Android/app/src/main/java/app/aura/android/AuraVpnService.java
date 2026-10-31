@@ -39,7 +39,7 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
     private void state(String value){if(current!=this)return;status=value;getSharedPreferences("runtime",MODE_PRIVATE).edit().putLong("revision",System.nanoTime()).apply();}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         boolean stop=intent!=null&&"STOP".equals(intent.getAction());
-        if(stop){desired=false;getSharedPreferences("runtime",MODE_PRIVATE).edit().putBoolean("desired",false).apply();long token=generation.incrementAndGet();state("disconnecting");worker.execute(()->{if(token!=generation.get())return;closeCore();connectedAt=0;publicIP="";state("disconnected");event("VPN отключён пользователем");stopForeground(STOP_FOREGROUND_REMOVE);if(startId==0)stopSelf();else stopSelfResult(startId);});return START_NOT_STICKY;}
+        if(stop){desired=false;lastError="";getSharedPreferences("runtime",MODE_PRIVATE).edit().putBoolean("desired",false).apply();long token=generation.incrementAndGet();state("disconnecting");worker.execute(()->{if(token!=generation.get())return;closeCore();connectedAt=0;publicIP="";state("disconnected");event("VPN отключён пользователем");stopForeground(STOP_FOREGROUND_REMOVE);if(startId==0)stopSelf();else stopSelfResult(startId);});return START_NOT_STICKY;}
         if(intent==null&&!alwaysOn&&!getSharedPreferences("runtime",MODE_PRIVATE).getBoolean("desired",false))return START_NOT_STICKY;
         if(desired&&!"RESTART".equals(intent==null?null:intent.getAction()))return START_STICKY;
         desired=true;retries=0;getSharedPreferences("runtime",MODE_PRIVATE).edit().putBoolean("desired",true).apply();long token=generation.incrementAndGet();lastError="";publicIP="";state("connecting");startForeground(7,notification("Подключение…"));worker.execute(()->startCore(token));return START_STICKY;
@@ -59,7 +59,7 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
         SetupOptions setup=new SetupOptions();setup.setBasePath(getFilesDir().getAbsolutePath());setup.setWorkingPath(new File(getFilesDir(),"box").getAbsolutePath());setup.setTempPath(getCacheDir().getAbsolutePath());Libbox.setup(setup);Libbox.setMemoryLimit(false);
         box=Libbox.newService(config.toString(),this);box.start();if(tunnel==null)throw new Exception("TUN missing");
         if(!desired||token!=generation.get()){closeCore();return;}
-        connectedAt=System.currentTimeMillis();publicIP="";rxTotal=txTotal=rxRate=txRate=0;state("connected");event("Туннель установлен");getSystemService(NotificationManager.class).notify(7,notification("VPN включён"));
+        connectedAt=System.currentTimeMillis();lastError="";publicIP="";rxTotal=txTotal=rxRate=txRate=0;state("connected");event("Туннель установлен");getSystemService(NotificationManager.class).notify(7,notification("VPN включён"));
         startMetrics(token);checkPublicIP();
     }catch(Exception e){closeCore();connectedAt=0;lastError="Не удалось запустить VPN. Проверьте разрешение, конфигурацию и сеть.";event("Ошибка запуска туннеля");
         boolean retry=desired&&!(e instanceof SecurityException)&&snapshot!=null&&snapshot.optBoolean("autoReconnect",true)&&retries++<5;

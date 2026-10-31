@@ -57,7 +57,7 @@ class AuraViewModel(app: Application): AndroidViewModel(app) {
         try { val next=repository.change(block);mutable.update { it.copy(raw=next) };done() } catch(_:Exception) { message("Не удалось сохранить изменения. Проверьте данные и состояние VPN.") }
     }
     fun setting(key: String, value: Any) { if(state.value.running && key in listOf("mtu","blockIPv6","dns","splitMode","autoReconnect")) { message("Сначала отключите VPN");return }; update({ it.put(key,value) }) }
-    fun appearance(value: AuraAppearance) = viewModelScope.launch { try { repository.appearance(value);if(state.value.loaded) update({ it.put("theme",if(value.dark)"dark" else "light").put("accent",if(value.accent=="blue")"blue" else "violet").put("backdrop","minimal").put("reduceMotion",!value.effects) }) } catch(_:Exception) { message("Оформление не сохранено") } }
+    fun appearance(value: AuraAppearance) = viewModelScope.launch { try { repository.appearance(value);if(state.value.loaded) { val next=repository.change { it.put("theme",if(value.dark)"dark" else "light").put("accent",if(value.accent=="blue")"blue" else "violet").put("backdrop","minimal").put("reduceMotion",!value.effects) };mutable.update { it.copy(raw=next) } } } catch(_:Exception) { message("Оформление не сохранено") } }
     fun select(id: String, selected: (Boolean)->Unit) {
         if(state.value.transition) { message("Дождитесь завершения подключения");return }
         val restart=state.value.status=="connected"
