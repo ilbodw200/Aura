@@ -33,8 +33,11 @@ public final class MainActivity extends Activity {
     private void requireOff()throws Exception{if(active())throw new Exception("Сначала отключите VPN, чтобы изменить конфигурацию.");}
     private void save()throws Exception{if(!storageReady)throw new Exception("Хранилище недоступно; существующие данные не перезаписаны.");vault.save(state);}
     @Override public void onCreate(Bundle saved){super.onCreate(saved);vault=new Vault(this);try{state=vault.load();storageReady=true;}catch(Exception e){try{state=Core.defaults();}catch(Exception ignored){}message("Не удалось открыть хранилище. Существующие данные сохранены без изменений.");}
+        if(Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,this::navigateBack);
         getSharedPreferences("runtime",MODE_PRIVATE).registerOnSharedPreferenceChangeListener(runtimeListener);render();handler.post(tick);
     }
+    private void navigateBack(){if(tab!=0){tab=0;render();}else finish();}
+    @Override public void onBackPressed(){navigateBack();}
     private final Runnable tick=new Runnable(){public void run(){if(timerText!=null&&AuraVpnService.status.equals("connected")){long seconds=Math.max(0,(System.currentTimeMillis()-AuraVpnService.connectedAt)/1000);timerText.setText(String.format(Locale.ROOT,"%02d:%02d:%02d",seconds/3600,seconds/60%60,seconds%60));}handler.postDelayed(this,1000);}};
     @Override protected void onDestroy(){getSharedPreferences("runtime",MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(runtimeListener);handler.removeCallbacks(tick);tasks.shutdownNow();restorePassword="";exportBytes=null;super.onDestroy();}
     private int accent(){switch(state.optString("accent")){case "blue":return 0xff75a7ff;case "violet":return 0xffbd90ff;case "rose":return 0xffff8bb2;case "amber":return 0xffffca75;default:return 0xff6eefc5;}}
