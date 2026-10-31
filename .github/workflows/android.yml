@@ -94,7 +94,7 @@ jobs:
             adb pull /sdcard/Aura-Minimal-Selected.png Aura-Minimal-Selected.png
             if adb shell pm list packages | grep -qx 'package:app.aura.android'; then adb uninstall app.aura.android; fi
             adb install Android/app/build/outputs/apk/release/app-release.apk
-            adb shell am start -W -n app.aura.android/.MainActivity
+            adb shell am start -W -n app.aura.android/.AuraActivity
             sleep 4
             adb shell screencap -p /sdcard/Aura-Android.png
             adb pull /sdcard/Aura-Android.png Aura-Android.png

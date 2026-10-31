@@ -10,7 +10,7 @@ import java.util.Locale;
 
 final class Ui {
     final Context context;final int accent,fg,muted,bg;final boolean light;final int radius;final boolean compact;
-    Ui(Context context,int accent,boolean light,int radius,boolean compact){this.context=context;this.accent=accent;this.light=light;this.radius=radius;this.compact=compact;fg=Color.parseColor(light?"#102B33":"#EDF5F5");muted=Color.parseColor(light?"#566A70":"#A0B2BC");bg=Color.parseColor(light?"#EDF3F3":"#07111C");}
+    Ui(Context context,int accent,boolean light,int radius,boolean compact){this.context=context;this.accent=accent;this.light=light;this.radius=radius;this.compact=compact;fg=Color.parseColor(light?"#102B33":"#EDF5F5");muted=Color.parseColor(light?"#566A70":"#A0B2BC");bg=Color.parseColor(light?"#EDF3F3":"#080B12");}
     int dp(float value){return (int)(value*context.getResources().getDisplayMetrics().density+.5f);}
     int alpha(int color,int alpha){return (color&0xffffff)|(alpha<<24);}
     GradientDrawable rounded(int color,int stroke,int r){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(r));if(stroke!=0)d.setStroke(dp(1),stroke);return d;}

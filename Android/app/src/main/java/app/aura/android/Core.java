@@ -120,7 +120,9 @@ public final class Core {
             out.put("transport",t);
         }
         if(type.equals("hysteria2")&&q.has("obfs")){if(!q.getString("obfs").equals("salamander")||q.optString("obfs-password").isEmpty())throw new Exception("Для Hysteria2 поддерживается salamander с паролем.");out.put("obfs",obj("type","salamander","password",q.getString("obfs-password")));}
+        int mtu=state.optInt("mtu",1400);if(mtu<1280||mtu>9000)throw new Exception("MTU: от 1280 до 9000.");
         JSONArray rules=array(obj("protocol","dns","action","hijack-dns"));
+        if(state.optBoolean("blockIPv6",true))rules.put(obj("ip_version",6,"action","reject"));
         if(state.optString("mode","smart").equals("smart")){
             JSONArray input=state.getJSONArray("rules");for(int i=0;i<input.length();i++){JSONObject r=input.getJSONObject(i);if(!r.optBoolean("enabled",true))continue;validateRule(r);String key;switch(r.getString("kind")){case "domain":key="domain";break;case "suffix":key="domain_suffix";break;case "keyword":key="domain_keyword";break;default:key="ip_cidr";}
                 JSONObject rule=obj(key,array(normalized(r.getString("value"))));String action=r.getString("action");if(action.equals("block"))rule.put("action","reject");else rule.put("outbound",action);rules.put(rule);
@@ -128,7 +130,7 @@ public final class Core {
         }
         if(state.optBoolean("bypassLAN",true))rules.put(obj("ip_is_private",true,"outbound","direct"));
         String finalRoute=state.optString("mode").equals("direct")?"direct":"proxy";
-        return obj("log",obj("level","warn"),"dns",obj("servers",array(obj("tag","secure","address",state.optString("dns","https://1.1.1.1/dns-query"),"detour",finalRoute)),"strategy","ipv4_only"),"inbounds",array(obj("type","tun","tag","tun-in","address",array("172.19.0.1/30","fdfe:dcba:9876::1/126"),"mtu",1400,"auto_route",true,"stack","gvisor","sniff",true)),"outbounds",array(out,obj("type","direct","tag","direct")),"route",obj("rules",rules,"final",finalRoute,"auto_detect_interface",true)).toString();
+        return obj("log",obj("level","warn"),"dns",obj("servers",array(obj("tag","secure","address",state.optString("dns","https://1.1.1.1/dns-query"),"detour",finalRoute)),"strategy","ipv4_only"),"inbounds",array(obj("type","tun","tag","tun-in","address",array("172.19.0.1/30","fdfe:dcba:9876::1/126"),"mtu",mtu,"auto_route",true,"stack","gvisor","sniff",true)),"outbounds",array(out,obj("type","direct","tag","direct")),"route",obj("rules",rules,"final",finalRoute,"auto_detect_interface",true)).toString();
     }
     static String normalized(String input){return input.trim().toLowerCase(Locale.ROOT).replaceAll("^\\.+|\\.+$","");}
     static long ipv4(String value){String[] parts=value.split("\\.",-1);if(parts.length!=4)return -1;long n=0;try{for(String p:parts){if(!p.matches("[0-9]{1,3}"))return -1;int v=Integer.parseInt(p);if(v>255)return -1;n=n*256+v;}return n;}catch(Exception e){return -1;}}
