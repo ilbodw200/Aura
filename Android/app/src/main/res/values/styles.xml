@@ -7,4 +7,8 @@
         <item name="android:windowBackground">#08121C</item>
         <item name="android:navigationBarColor">#08121C</item>
     </style>
+    <style name="AuraSheetAnimation">
+        <item name="android:windowEnterAnimation">@anim/sheet_enter</item>
+        <item name="android:windowExitAnimation">@anim/sheet_exit</item>
+    </style>
 </resources>

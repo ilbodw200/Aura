@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public final class MainActivity extends Activity {
+    private String homeGroup="";
     private JSONObject state;private Vault vault;private boolean storageReady,busy;private int tab;private Ui ui;private LinearLayout body;private TextView statusText,timerText;
     private final Set<String> collapsedGroups=new HashSet<>();private boolean collapseAll=false,batchProbing=false;private volatile boolean cancelBatch=false;
     private final ExecutorService tasks=Executors.newSingleThreadExecutor();private final Handler handler=new Handler(Looper.getMainLooper());private byte[] exportBytes;private String restorePassword="";
@@ -44,6 +45,24 @@ public final class MainActivity extends Activity {
         root.setBackground(state.optString("backdrop").equals("minimal")?ui.rounded(ui.bg,0,0):new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{ui.light?0xffd9f0e7:0xff0b2c2c,ui.bg,ui.light?0xffe7e5f4:second}));
         getWindow().setStatusBarColor(ui.bg);getWindow().setNavigationBarColor(ui.bg);getWindow().getDecorView().setSystemUiVisibility(ui.light?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR:0);
         root.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets.consumeSystemWindowInsets();});
+        if(tab==0&&!state.optBoolean("classicHome")){
+            body=root;
+            try{
+                if(!homeGroup.isEmpty()&&Core.find(state.getJSONArray("subscriptions"),homeGroup)==null)homeGroup="";
+                MinimalDashboard dashboard=new MinimalDashboard(this,ui,state,homeGroup,statusTitle(),active(),new MinimalDashboard.Actions(){
+                    public void connect(){safe(MainActivity.this::toggleVPN);}
+                    public void subscriptions(){safe(MainActivity.this::homeSubscriptions);}
+                    public void tools(){homeTools();}
+                    public void ping(){safe(MainActivity.this::pingSettings);}
+                    public void add(){importDialog("");}
+                    public void select(JSONObject profile){safe(()->MainActivity.this.select(profile));}
+                    public void options(JSONObject profile){profileMenu(profile);}
+                    public void measure(List<JSONObject> profiles){safe(()->measureGroup(profiles));}
+                });
+                timerText=dashboard.timer;root.addView(dashboard.view,new LinearLayout.LayoutParams(-1,0,1));
+            }catch(Exception e){ui.add(root,button("Открыть подключения",()->{tab=1;render();}));}
+            setContentView(root);root.requestApplyInsets();return;
+        }
         ScrollView scroll=new ScrollView(this);scroll.setClipToPadding(false);body=ui.column();body.setPadding(ui.dp(22),ui.dp(18),ui.dp(22),ui.dp(24));scroll.addView(body);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
         LinearLayout brand=ui.line();TextView logo=ui.title("AURA",18);logo.setLetterSpacing(.15f);brand.addView(logo,new LinearLayout.LayoutParams(0,-2,1));brand.addView(ui.button("QR",this::scan),new LinearLayout.LayoutParams(ui.dp(52),ui.dp(46)));ui.add(body,brand);ui.space(body,24);
         try{switch(tab){case 0:home();break;case 1:profiles();break;case 2:rules();break;case 3:studio();break;default:settings();}}catch(Exception e){ui.add(body,ui.text("Не удалось отобразить данные. Откройте настройки и проверьте резервную копию.",14,ui.muted));}
@@ -52,6 +71,12 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,-2);np.setMargins(ui.dp(12),0,ui.dp(12),ui.dp(8));root.addView(nav,np);setContentView(root);root.requestApplyInsets();
     }
     private TextView button(String title,Action action){return ui.button(title,()->safe(action));}
+    private void homeTools(){new AlertDialog.Builder(this).setTitle("AURA").setItems(new String[]{"Серверы и подписки","Добавить подключение","Сканировать QR-код","Настройки пинга","Правила маршрутизации","Студия оформления","Настройки и HWID"},(d,index)->safe(()->{switch(index){case 0:tab=1;render();break;case 1:importDialog("");break;case 2:scan();break;case 3:pingSettings();break;case 4:tab=2;render();break;case 5:tab=3;render();break;default:tab=4;render();}})).show();}
+    private void homeSubscriptions()throws Exception{
+        JSONArray subs=state.getJSONArray("subscriptions");String[] labels=new String[subs.length()+3];labels[0]="Все подключения";
+        for(int i=0;i<subs.length();i++)labels[i+1]=subs.getJSONObject(i).optString("name");labels[labels.length-2]="＋ Добавить подписку";labels[labels.length-1]="Управление подписками";
+        new AlertDialog.Builder(this).setTitle("Подписка").setItems(labels,(d,index)->safe(()->{if(index==labels.length-2){importDialog("");return;}if(index==labels.length-1){tab=1;render();return;}homeGroup=index==0?"":subs.getJSONObject(index-1).getString("id");render();})).show();
+    }
     private void heading(String kicker,String title){ui.add(body,ui.caption(kicker.toUpperCase(Locale.ROOT)));ui.space(body,8);ui.add(body,ui.title(title,29));ui.space(body,22);}
     private LinearLayout info(LinearLayout parent,String title,String detail){LinearLayout card=ui.card(parent);ui.add(card,ui.title(title,16));if(!detail.isEmpty()){ui.space(card,7);ui.add(card,ui.text(detail,12,ui.muted));}return card;}
     private void home()throws Exception{
@@ -237,6 +262,7 @@ public final class MainActivity extends Activity {
     private void settings()throws Exception{
         heading("Настройте под себя","Настройки");LinearLayout device=info(body,"HWID устройства",DeviceInfo.hwid(this));ui.add(device,button("Скопировать HWID",()->{getSystemService(android.content.ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("HWID AURA",DeviceInfo.hwid(this)));message("HWID скопирован.");}));ui.add(device,ui.toggle("HWID для новых подписок",state.optBoolean("sendHWID"),v->safe(()->{state.put("sendHWID",v);save();})));ui.add(device,ui.text("Отправляется только провайдеру выбранной подписки при включении. Это идентификатор установки AURA, не IMEI и не серийный номер.",12,ui.muted));
         LinearLayout connection=ui.card(body);ui.add(connection,button("Приложения без VPN",this::excludedApps));ui.space(connection,10);ui.add(connection,button("DNS через туннель",()->{requireOff();choose("DNS",new String[]{"Cloudflare · DoH","Google · DoH","Quad9 · DoH"},new String[]{"https://1.1.1.1/dns-query","https://8.8.8.8/dns-query","https://9.9.9.9/dns-query"},"dns");}));ui.add(connection,ui.toggle("Скрывать в переключателе",state.optBoolean("hideRecents",true),v->safe(()->{state.put("hideRecents",v);save();render();})));
+        LinearLayout appearance=ui.card(body);ui.add(appearance,ui.toggle("Минимум анимаций",state.optBoolean("reduceMotion"),v->safe(()->{state.put("reduceMotion",v);save();})));ui.add(appearance,ui.toggle("Классический главный экран",state.optBoolean("classicHome"),v->safe(()->{state.put("classicHome",v);save();})));
         LinearLayout tools=ui.card(body);ui.add(tools,button("Настройки пинга",this::pingSettings));ui.space(tools,10);ui.add(tools,button("Диагностика",this::diagnostics));ui.space(tools,10);ui.add(tools,button("Создать резервную копию",this::exportBackup));ui.space(tools,10);ui.add(tools,button("Восстановить копию",this::restoreBackup));
         LinearLayout about=info(body,"AURA Android · "+BuildConfig.VERSION_NAME,"Native Android · sing-box 1.11.15\nDeveloper Preview · GPL-3.0-or-later");ui.add(about,ui.text("Конфигурации шифруются ключом Android Keystore. В приложении нет аналитики или рекламы. Обычные серверы и подписки нужно добавить самостоятельно. Фирменные зашифрованные ссылки Happ и XHTTP пока не поддерживаются.",12,ui.muted));ui.add(about,button("Исходники и лицензия",()->startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://github.com/ilbodw200/Aura")))));
     }

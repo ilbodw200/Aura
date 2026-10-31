@@ -88,6 +88,9 @@ jobs:
             gradle -p Android --no-daemon connectedDebugAndroidTest
             adb pull /sdcard/Aura-Library.png Aura-Library.png
             adb pull /sdcard/Aura-Ping.png Aura-Ping.png
+            adb pull /sdcard/Aura-Minimal-Home.png Aura-Minimal-Home.png
+            adb pull /sdcard/Aura-Minimal-Servers.png Aura-Minimal-Servers.png
+            adb pull /sdcard/Aura-Minimal-Selected.png Aura-Minimal-Selected.png
             if adb shell pm list packages | grep -qx 'package:app.aura.android'; then adb uninstall app.aura.android; fi
             adb install Android/app/build/outputs/apk/release/app-release.apk
             adb shell am start -W -n app.aura.android/.MainActivity
@@ -112,4 +115,7 @@ jobs:
             Aura-Android.png
             Aura-Library.png
             Aura-Ping.png
+            Aura-Minimal-Home.png
+            Aura-Minimal-Servers.png
+            Aura-Minimal-Selected.png
             Android-launch.log
