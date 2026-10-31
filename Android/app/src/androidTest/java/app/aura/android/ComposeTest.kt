@@ -26,7 +26,7 @@ class ComposeTest {
         try {
             val state=Core.defaults().put("hideRecents",false)
             var last=""
-            for(i in 1..57){val p=Core.link("socks5://server$i.example.invalid:1080#Test");p.put("name","🇩🇪 Сервер %02d".format(i));state.getJSONArray("profiles").put(p);if(i==1)state.put("selected",p.getString("id"));last=p.getString("id")}
+            for(i in 1..57){val p=Core.link("socks5://server$i.example.invalid:1080#Test");p.put("name","🇩🇪 Сервер %02d".format(i));state.getJSONArray("profiles").put(p);if(i==1)state.put("selected",p.getString("id"));last=p.getString("id");if(i==57)p.put("latency",42).put("pingStatus",204).put("latencyCheckedAt",System.currentTimeMillis())}
             vault.save(state);runBlocking{repository.appearance(AuraAppearance(effects=false))}
             activity=instrumentation.startActivitySync(Intent(context,AuraActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as AuraActivity
             compose.waitUntil(10000){compose.onAllNodesWithText("AURA VPN").fetchSemanticsNodes().isNotEmpty()}
@@ -53,8 +53,12 @@ class ComposeTest {
             compose.onNodeWithContentDescription("Настройки пинга").performClick()
             capture("Aura-Compose-Ping.png")
             compose.onNodeWithText("Через прокси · HEAD").performClick()
+            compose.onNodeWithContentDescription("HTTP-статус вместо времени").performScrollTo().performClick()
             compose.onNodeWithText("Сохранить").performClick()
             compose.waitUntil(5000){Ping.settings(vault.load()).optString("method")=="HEAD"}
+            compose.onNodeWithContentDescription("Главная").performClick()
+            compose.onNodeWithText("HTTP 204").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Настройки").performClick()
             compose.onNodeWithContentDescription("Настройки пинга").performClick()
             compose.onNodeWithText("TCP").performClick()
             compose.onNodeWithContentDescription("Назад").performClick()
