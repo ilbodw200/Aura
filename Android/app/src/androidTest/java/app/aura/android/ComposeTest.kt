@@ -41,7 +41,7 @@ class ComposeTest {
             instrumentation.uiAutomation.waitForIdle(250,5000)
             compose.onNodeWithTag("server.$last").performClick()
             compose.waitUntil(5000){vault.load().optString("selected")==last}
-            compose.onNodeWithText("Сервер 57").assertIsDisplayed()
+            visibleText("Сервер 57")
             compose.onNodeWithContentDescription("Серверы").performClick()
             compose.onNodeWithTag("servers.search").performTextInput("Сервер 57")
             compose.onNodeWithTag("servers.search").performImeAction()
@@ -57,7 +57,7 @@ class ComposeTest {
             compose.onNodeWithText("Сохранить").performClick()
             compose.waitUntil(5000){Ping.settings(vault.load()).optString("method")=="HEAD"}
             compose.onNodeWithContentDescription("Главная").performClick()
-            compose.onNodeWithText("HTTP 204").assertIsDisplayed()
+            visibleText("HTTP 204")
             compose.onNodeWithContentDescription("Настройки").performClick()
             compose.onNodeWithContentDescription("Настройки пинга").performClick()
             compose.onNodeWithText("TCP").performClick()
@@ -66,7 +66,7 @@ class ComposeTest {
             compose.onNodeWithText("Cyber Blue").performScrollTo().performClick()
             compose.waitUntil(5000){runBlocking{repository.appearance.first()}.accent=="blue"}
             compose.onNodeWithContentDescription("Главная").performClick()
-            compose.onNodeWithText("Сервер 57").assertIsDisplayed()
+            visibleText("Сервер 57")
             compose.onNodeWithContentDescription("Подключить VPN").assertIsDisplayed();completed=true
         } finally {
             if(!completed&&activity!=null)runCatching{capture("Aura-Compose-Failure.png")}
@@ -74,5 +74,6 @@ class ComposeTest {
             vault.save(previous);runBlocking{repository.appearance(appearance)}
         }
     }
+    private fun visibleText(text:String){compose.waitUntil(5000){runCatching{compose.onNodeWithText(text).assertIsDisplayed()}.isSuccess}}
     private fun capture(name:String){val ui=InstrumentationRegistry.getInstrumentation();compose.waitForIdle();ui.uiAutomation.executeShellCommand("screencap -p /sdcard/$name").use{fd->java.io.FileInputStream(fd.fileDescriptor).use{it.copyTo(java.io.OutputStream.nullOutputStream())}}}
 }
