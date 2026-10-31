@@ -56,7 +56,7 @@ class ComposeTest {
             compose.onNodeWithText("Cyber Blue").performScrollTo().performClick()
             compose.waitUntil(5000){runBlocking{repository.appearance.first()}.accent=="blue"}
             compose.onNodeWithContentDescription("Главная").performClick()
-            compose.onNodeWithText("🇩🇪 Сервер 57").assertIsDisplayed()
+            compose.onNodeWithText("Сервер 57").assertIsDisplayed()
             compose.onNodeWithContentDescription("Подключить VPN").assertIsDisplayed();completed=true
         } finally {
             if(!completed&&activity!=null)runCatching{capture("Aura-Compose-Failure.png")}

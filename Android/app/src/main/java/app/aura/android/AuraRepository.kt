@@ -15,6 +15,7 @@ import org.json.JSONObject
 private val Context.auraPreferences by preferencesDataStore("aura_interface")
 data class AuraAppearance(val dark: Boolean = true, val accent: String = "purple", val intensity: Float = .6f, val effects: Boolean = true)
 data class AuraServer(val id: String, val name: String, val kind: String, val transport: String, val group: String, val favorite: Boolean, val latency: Int?, val failed: Boolean, val checkedAt: Long) {
+    val displayName: String get() = if(flag=="◎") name else name.replaceFirst(flag,"").trim()
     val flag: String get() { val p = name.codePoints().toArray(); for (i in 0 until p.size - 1) if (p[i] in 0x1f1e6..0x1f1ff && p[i+1] in 0x1f1e6..0x1f1ff) return String(p, i, 2); return "◎" }
 }
 data class AuraState(
