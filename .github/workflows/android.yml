@@ -88,6 +88,7 @@ jobs:
             gradle -p Android --no-daemon connectedDebugAndroidTest || { adb pull /sdcard/Aura-Minimal-Home.png Aura-Minimal-Home.png; adb pull /sdcard/Aura-Minimal-Servers.png Aura-Minimal-Servers.png; adb pull /sdcard/Aura-Minimal-Selected.png Aura-Minimal-Selected.png; exit 1; }
             adb pull /sdcard/Aura-Library.png Aura-Library.png
             adb pull /sdcard/Aura-Ping.png Aura-Ping.png
+            adb pull /sdcard/Aura-Settings.png Aura-Settings.png
             adb pull /sdcard/Aura-Minimal-Home.png Aura-Minimal-Home.png
             adb pull /sdcard/Aura-Minimal-Servers.png Aura-Minimal-Servers.png
             adb pull /sdcard/Aura-Minimal-Selected.png Aura-Minimal-Selected.png
@@ -115,6 +116,7 @@ jobs:
             Aura-Android.png
             Aura-Library.png
             Aura-Ping.png
+            Aura-Settings.png
             Aura-Minimal-Home.png
             Aura-Minimal-Servers.png
             Aura-Minimal-Selected.png

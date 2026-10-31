@@ -35,8 +35,8 @@ final class MinimalDashboard {
         TextView title=chip(subscription==null?"Все подключения  ⌄":subscription.optString("name")+"  ⌄",actions::subscriptions);
         title.setGravity(Gravity.CENTER_VERTICAL);title.setSingleLine(true);title.setEllipsize(TextUtils.TruncateAt.END);title.setContentDescription("Выбрать подписку");
         top.addView(title,new LinearLayout.LayoutParams(0,ui.dp(50),1));
-        TextView ping=chip("◴",actions::ping);ping.setContentDescription("Настройки пинга");addTool(top,ping);
-        TextView settings=chip("⚙",actions::tools);settings.setContentDescription("Меню AURA");addTool(top,settings);ui.add(view,top);
+        ImageButton ping=ui.iconButton("ping","Настройки пинга",actions::ping);ping.setContentDescription("Настройки пинга");addTool(top,ping);
+        ImageButton settings=ui.iconButton("settings","Настройки AURA",actions::tools);addTool(top,settings);ui.add(view,top);
 
         LinearLayout centre=ui.column();centre.setGravity(Gravity.CENTER);
         PowerBadge badge=new PowerBadge(ui,active,AuraVpnService.status.equals("connecting"));
