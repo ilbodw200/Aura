@@ -21,7 +21,7 @@ data class AuraState(
     val raw: JSONObject = Core.defaults(), val loaded: Boolean = false, val appearance: AuraAppearance = AuraAppearance(),
     val status: String = "disconnected", val error: String? = null, val probing: String? = null,
     val rx: Long = 0, val tx: Long = 0, val rxRate: Long = 0, val txRate: Long = 0,
-    val metrics: Boolean = false, val ip: String = "", val seconds: Long = 0
+    val metrics: Boolean = false, val ip: String = "", val ipState: String = "idle", val seconds: Long = 0
 ) {
     val running get() = status in listOf("connecting", "connected", "reconnecting", "disconnecting")
     val transition get() = status in listOf("connecting", "disconnecting", "reconnecting")
@@ -48,7 +48,7 @@ class AuraViewModel(app: Application): AndroidViewModel(app) {
     init {
         viewModelScope.launch { repository.appearance.catch { message("Не удалось открыть настройки оформления") }.collect { p -> mutable.update { it.copy(appearance=p) } } }
         refresh()
-        viewModelScope.launch { while(isActive) { if(foreground) { val now=System.currentTimeMillis();mutable.update { it.copy(status=AuraVpnService.status,rx=AuraVpnService.rxTotal,tx=AuraVpnService.txTotal,rxRate=AuraVpnService.rxRate,txRate=AuraVpnService.txRate,metrics=AuraVpnService.metricsAvailable,ip=AuraVpnService.publicIP,seconds=if(AuraVpnService.connectedAt>0) ((now-AuraVpnService.connectedAt)/1000).coerceAtLeast(0) else 0) } };delay(1000) } }
+        viewModelScope.launch { while(isActive) { if(foreground) { val now=System.currentTimeMillis();mutable.update { it.copy(status=AuraVpnService.status,rx=AuraVpnService.rxTotal,tx=AuraVpnService.txTotal,rxRate=AuraVpnService.rxRate,txRate=AuraVpnService.txRate,metrics=AuraVpnService.metricsAvailable,ip=AuraVpnService.publicIP,ipState=AuraVpnService.publicIPState,seconds=if(AuraVpnService.connectedAt>0) ((now-AuraVpnService.connectedAt)/1000).coerceAtLeast(0) else 0) } };delay(1000) } }
     }
     fun refresh() = viewModelScope.launch { try { val raw=repository.load();mutable.update { it.copy(raw=raw,loaded=true,status=AuraVpnService.status) } } catch(_:Exception) { message("Хранилище не открыто. Существующие данные не изменены.") } }
     fun message(text: String?) { mutable.update { it.copy(error=text) } }

@@ -21,6 +21,7 @@ class ComposeTest {
         val context=instrumentation.targetContext
         val vault=Vault(context);val previous=vault.load();var activity:AuraActivity?=null
         val repository=AuraRepository(context.applicationContext as Application)
+        var completed=false
         val appearance=runBlocking{repository.appearance.first()}
         try {
             val state=Core.defaults().put("hideRecents",false)
@@ -35,6 +36,8 @@ class ComposeTest {
             compose.onNodeWithTag("server.$last").assertIsDisplayed()
             capture("Aura-Compose-Servers.png")
             compose.onNodeWithTag("servers.search").performTextInput("Сервер 57")
+            compose.onNodeWithTag("servers.search").performImeAction()
+            instrumentation.uiAutomation.waitForIdle(250,5000)
             compose.onNodeWithTag("server.$last").performClick()
             compose.waitUntil(5000){vault.load().optString("selected")==last}
             compose.onNodeWithContentDescription("В избранное").performClick()
@@ -54,8 +57,9 @@ class ComposeTest {
             compose.waitUntil(5000){runBlocking{repository.appearance.first()}.accent=="blue"}
             compose.onNodeWithContentDescription("Главная").performClick()
             compose.onNodeWithText("🇩🇪 Сервер 57").assertIsDisplayed()
-            compose.onNodeWithContentDescription("Подключить VPN").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Подключить VPN").assertIsDisplayed();completed=true
         } finally {
+            if(!completed&&activity!=null)runCatching{capture("Aura-Compose-Failure.png")}
             activity?.let { current->instrumentation.runOnMainSync {current.finish()} }
             vault.save(previous);runBlocking{repository.appearance(appearance)}
         }

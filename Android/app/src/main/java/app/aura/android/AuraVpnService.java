@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public final class AuraVpnService extends VpnService implements PlatformInterface {
-    public static volatile String status="disconnected",lastError="",publicIP="";
+    public static volatile String status="disconnected",lastError="",publicIP="",publicIPState="idle";
     public static volatile long connectedAt,rxTotal,txTotal,rxRate,txRate;
     public static volatile boolean metricsAvailable,alwaysOn,lockdown;
     private static volatile AuraVpnService current;
@@ -36,6 +36,7 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
     private volatile InterfaceUpdateListener listener;
     private static final String CHANNEL="aura-vpn";
     private int retries;
+    private ScheduledFuture<?> retryFuture;
     @Override public void onCreate(){super.onCreate();current=this;connectivity=getSystemService(ConnectivityManager.class);getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel(CHANNEL,"Подключение AURA",NotificationManager.IMPORTANCE_LOW));if(Build.VERSION.SDK_INT>=29){alwaysOn=isAlwaysOn();lockdown=isLockdownEnabled();}}
     private void state(String value){if(current!=this)return;status=value;getSharedPreferences("runtime",MODE_PRIVATE).edit().putLong("revision",System.nanoTime()).apply();}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
@@ -64,7 +65,7 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
         startMetrics(token);checkPublicIP();
     }catch(Exception e){closeCore();connectedAt=0;lastError="Не удалось запустить VPN. Проверьте разрешение, конфигурацию и сеть.";event("Ошибка запуска туннеля");
         boolean retry=desired&&!(e instanceof SecurityException)&&snapshot!=null&&snapshot.optBoolean("autoReconnect",true)&&retries++<5;
-        if(retry){state("reconnecting");int delay=Math.min(60,2<<retries);worker.schedule(()->{if(token==generation.get()&&desired)startCore(token);},delay,TimeUnit.SECONDS);}else{desired=false;getSharedPreferences("runtime",MODE_PRIVATE).edit().putBoolean("desired",false).apply();state("error");stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();}
+        if(retry){state("reconnecting");int delay=Math.min(60,2<<retries);retryFuture=worker.schedule(()->{if(token==generation.get()&&desired)startCore(token);},delay,TimeUnit.SECONDS);}else{desired=false;getSharedPreferences("runtime",MODE_PRIVATE).edit().putBoolean("desired",false).apply();state("error");stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();}
     }}
     private void startMetrics(long token){try{
         commandServer=Libbox.newCommandServer(new CommandServerHandler(){public void serviceReload(){worker.execute(()->startCore(generation.get()));}public void postServiceClose(){stopRequested();}public SystemProxyStatus getSystemProxyStatus(){return new SystemProxyStatus();}public void setSystemProxyEnabled(boolean enabled){}},10);commandServer.setService(box);commandServer.start();
@@ -73,8 +74,8 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
             public void writeStatus(StatusMessage message){if(token!=generation.get()||current!=AuraVpnService.this)return;metricsAvailable=message.getTrafficAvailable();rxTotal=message.getDownlinkTotal();txTotal=message.getUplinkTotal();rxRate=Math.max(0,message.getDownlink());txRate=Math.max(0,message.getUplink());}
         },options);commandClient.connect();
     }catch(Exception e){metricsAvailable=false;event("Счётчики ядра временно недоступны");}}
-    public static void checkPublicIP(){AuraVpnService service=current;if(service==null||!status.equals("connected")||!service.ipChecking.compareAndSet(false,true))return;long token=service.generation.get();TunnelHttp.Endpoint target=service.endpoint;try{service.probes.execute(()->{try{if(token!=service.generation.get())return;String ip=TunnelHttp.publicIP(target);if(token==service.generation.get()&&service.desired){publicIP=ip;event("IP через выбранный прокси проверен");}}catch(Exception e){if(token==service.generation.get())event("Проверка IP недоступна; прямой запрос не выполнялся");}finally{service.ipChecking.set(false);}});}catch(RejectedExecutionException e){service.ipChecking.set(false);}}
-    private void closeCore(){metricsAvailable=false;endpoint=null;if(commandClient!=null){try{commandClient.disconnect();}catch(Exception ignored){}commandClient=null;}if(commandServer!=null){try{commandServer.close();}catch(Exception ignored){}commandServer=null;}if(box!=null){try{box.close();}catch(Exception ignored){}box=null;}if(tunnel!=null){try{tunnel.close();}catch(Exception ignored){}tunnel=null;}try{closeDefaultInterfaceMonitor(listener);}catch(Exception ignored){}rxRate=txRate=0;}
+    public static void checkPublicIP(){AuraVpnService service=current;if(service==null||!status.equals("connected")||!service.ipChecking.compareAndSet(false,true))return;long token=service.generation.get();TunnelHttp.Endpoint target=service.endpoint;publicIPState="checking";try{service.probes.execute(()->{try{if(token!=service.generation.get())return;String ip=TunnelHttp.publicIP(target);if(token==service.generation.get()&&service.desired){publicIP=ip;publicIPState="verified";event("IP через выбранный прокси проверен");}}catch(Exception e){if(token==service.generation.get()){publicIPState="unavailable";event("Проверка IP недоступна; прямой запрос не выполнялся");}}finally{service.ipChecking.set(false);if(token!=service.generation.get()&&service.desired&&current==service)checkPublicIP();}});}catch(RejectedExecutionException e){service.ipChecking.set(false);}}
+    private void closeCore(){if(retryFuture!=null){retryFuture.cancel(false);retryFuture=null;}if(current==this){metricsAvailable=false;publicIPState="idle";}endpoint=null;if(commandClient!=null){try{commandClient.disconnect();}catch(Exception ignored){}commandClient=null;}if(commandServer!=null){try{commandServer.close();}catch(Exception ignored){}commandServer=null;}if(box!=null){try{box.close();}catch(Exception ignored){}box=null;}if(tunnel!=null){try{tunnel.close();}catch(Exception ignored){}tunnel=null;}try{closeDefaultInterfaceMonitor(listener);}catch(Exception ignored){}rxRate=txRate=0;}
     private void stopRequested(){onStartCommand(new Intent(this,AuraVpnService.class).setAction("STOP"),0,0);}
     @Override public void onRevoke(){event("Системное разрешение VPN отозвано");stopRequested();}
     @Override public void onDestroy(){desired=false;generation.incrementAndGet();worker.execute(()->{closeCore();if(current==this){connectedAt=0;state(lastError.isEmpty()?"disconnected":"error");current=null;}});worker.shutdown();probes.shutdownNow();super.onDestroy();}
@@ -89,8 +90,10 @@ public final class AuraVpnService extends VpnService implements PlatformInterfac
         // Control traffic and native core sockets must never be captured by their own TUN.
         boolean include=snapshot.optString("splitMode","exclude").equals("include");JSONArray apps=snapshot.optJSONArray(include?"includedApps":"excludedApps");
         if(include&&(apps==null||apps.length()==0))throw new Exception("Choose at least one VPN application");
+        int allowedCount=0;
         if(!include)builder.addDisallowedApplication(getPackageName());
-        if(apps!=null)for(int i=0;i<apps.length();i++){String pkg=apps.getString(i);if(pkg.equals(getPackageName()))continue;try{if(include)builder.addAllowedApplication(pkg);else builder.addDisallowedApplication(pkg);}catch(PackageManager.NameNotFoundException ignored){}}
+        if(apps!=null)for(int i=0;i<apps.length();i++){String pkg=apps.getString(i);if(pkg.equals(getPackageName()))continue;try{if(include){builder.addAllowedApplication(pkg);allowedCount++;}else builder.addDisallowedApplication(pkg);}catch(PackageManager.NameNotFoundException ignored){}}
+        if(include&&allowedCount==0)throw new Exception("Selected VPN applications are not installed");
         tunnel=builder.establish();if(tunnel==null)throw new Exception("Android did not establish TUN");return tunnel.getFd();
     }
     @Override public boolean usePlatformAutoDetectInterfaceControl(){return true;}

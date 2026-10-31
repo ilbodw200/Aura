@@ -85,7 +85,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            gradle -p Android --no-daemon connectedDebugAndroidTest || { adb pull /sdcard/Aura-Compose-Home.png Aura-Compose-Home.png; adb pull /sdcard/Aura-Compose-Servers.png Aura-Compose-Servers.png; adb pull /sdcard/Aura-Compose-Settings.png Aura-Compose-Settings.png; adb pull /sdcard/Aura-Compose-Ping.png Aura-Compose-Ping.png; exit 1; }
+            gradle -p Android --no-daemon connectedDebugAndroidTest || { adb pull /sdcard/Aura-Compose-Failure.png Aura-Compose-Failure.png || true; adb pull /sdcard/Aura-Compose-Home.png Aura-Compose-Home.png; adb pull /sdcard/Aura-Compose-Servers.png Aura-Compose-Servers.png; adb pull /sdcard/Aura-Compose-Settings.png Aura-Compose-Settings.png; adb pull /sdcard/Aura-Compose-Ping.png Aura-Compose-Ping.png; exit 1; }
             adb pull /sdcard/Aura-Library.png Aura-Library.png
             adb pull /sdcard/Aura-Ping.png Aura-Ping.png
             adb pull /sdcard/Aura-Compose-Home.png Aura-Compose-Home.png
@@ -120,4 +120,5 @@ jobs:
             Aura-Compose-Servers.png
             Aura-Compose-Settings.png
             Aura-Compose-Ping.png
+            Aura-Compose-Failure.png
             Android-launch.log
