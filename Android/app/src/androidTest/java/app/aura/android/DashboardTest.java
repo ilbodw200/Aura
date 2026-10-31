@@ -19,7 +19,12 @@ public class DashboardTest {
         if((description==null||(node.getContentDescription()!=null&&node.getContentDescription().toString().startsWith(description)))&&(className==null||className.contentEquals(node.getClassName())))return node;
         for(int i=0;i<node.getChildCount();i++){AccessibilityNodeInfo result=find(node.getChild(i),description,className);if(result!=null)return result;}return null;
     }
-    private AccessibilityNodeInfo node(String description,String className){return find(instrumentation.getUiAutomation().getRootInActiveWindow(),description,className);}
+    private AccessibilityNodeInfo node(String description,String className){
+        long deadline=android.os.SystemClock.uptimeMillis()+5000;
+        do{AccessibilityNodeInfo result=find(instrumentation.getUiAutomation().getRootInActiveWindow(),description,className);if(result!=null)return result;android.os.SystemClock.sleep(100);}while(android.os.SystemClock.uptimeMillis()<deadline);
+        return null;
+    }
+    private void idle()throws Exception{instrumentation.waitForIdleSync();instrumentation.getUiAutomation().waitForIdle(250,5000);}
     private void capture(String file)throws Exception{try(android.os.ParcelFileDescriptor fd=instrumentation.getUiAutomation().executeShellCommand("screencap -p /sdcard/"+file);java.io.FileInputStream input=new java.io.FileInputStream(fd.getFileDescriptor())){while(input.read()!=-1){}}}
     @Test public void serverPanelScrollsSearchesAndSelectsLastOf57()throws Exception{
         Context context=instrumentation.getTargetContext();Vault vault=new Vault(context);JSONObject previous=vault.load();MainActivity activity=null;
@@ -27,10 +32,10 @@ public class DashboardTest {
             JSONObject state=Core.defaults();state.put("hideRecents",false).put("reduceMotion",true);String lastId="";
             for(int i=1;i<=57;i++){JSONObject p=Core.link("socks5://server"+i+".example.invalid:1080#Server");p.put("name",String.format(java.util.Locale.ROOT,"Сервер %02d",i));state.getJSONArray("profiles").put(p);if(i==1)state.put("selected",p.getString("id"));lastId=p.getString("id");}
             vault.save(state);activity=(MainActivity)instrumentation.startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));instrumentation.waitForIdleSync();
-            assertNotNull(node("Подключить VPN",null));capture("Aura-Minimal-Home.png");
+            idle();capture("Aura-Minimal-Home.png");assertNotNull(node("Подключить VPN",null));
             AccessibilityNodeInfo selector=node("Открыть серверы",null);assertNotNull(selector);assertTrue(selector.performAction(AccessibilityNodeInfo.ACTION_CLICK));instrumentation.waitForIdleSync();
             AccessibilityNodeInfo grid=node(null,"android.widget.GridView");assertNotNull(grid);
-            for(int i=0;i<30&&node("Сервер 57,",null)==null;i++){assertTrue(grid.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD));instrumentation.waitForIdleSync();grid=node(null,"android.widget.GridView");}
+            for(int i=0;i<30&&find(instrumentation.getUiAutomation().getRootInActiveWindow(),"Сервер 57,",null)==null;i++){assertTrue(grid.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD));idle();grid=node(null,"android.widget.GridView");}
             assertNotNull("The final server is reachable by scrolling",node("Сервер 57,",null));capture("Aura-Minimal-Servers.png");
             AccessibilityNodeInfo search=node("Поиск серверов",null);assertNotNull(search);Bundle text=new Bundle();text.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"Сервер 57");assertTrue(search.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,text));instrumentation.waitForIdleSync();
             AccessibilityNodeInfo last=node("Сервер 57,",null);assertNotNull(last);assertTrue(last.performAction(AccessibilityNodeInfo.ACTION_CLICK));instrumentation.waitForIdleSync();

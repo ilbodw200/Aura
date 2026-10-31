@@ -85,6 +85,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
+            trap 'adb pull /sdcard/Aura-Minimal-Home.png Aura-Minimal-Home.png || true; adb pull /sdcard/Aura-Minimal-Servers.png Aura-Minimal-Servers.png || true; adb pull /sdcard/Aura-Minimal-Selected.png Aura-Minimal-Selected.png || true' EXIT
             gradle -p Android --no-daemon connectedDebugAndroidTest
             adb pull /sdcard/Aura-Library.png Aura-Library.png
             adb pull /sdcard/Aura-Ping.png Aura-Ping.png
